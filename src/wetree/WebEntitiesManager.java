@@ -341,6 +341,7 @@ public class WebEntitiesManager {
             } else {
                 lruNode.setLinksFrom(nextlinkid);
             }
+            lruNode.write();
             // Create the stub
             linkTreeNode linkNode = new linkTreeNode(linkTreeFile, nextlinkid);
             linkNode.setLru(node2id);
