@@ -5,6 +5,7 @@
  */
 package wetree;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.concurrent.ThreadLocalRandom;
@@ -20,7 +21,7 @@ public class Wetree {
      * @throws java.io.IOException
      */
     public static void main(String[] args) throws IOException {
-        String path = "D:\\temp\\";
+        String path = System.getProperty("user.dir") + File.separator + "data" + File.separator;
         
         WebEntitiesManager wem;
         wem = new WebEntitiesManager(path);
@@ -28,7 +29,7 @@ public class Wetree {
         wem.reset();
         buildFakeCorpus(wem);
         
-        wem.log();
+//        wem.log();
 
     }
     
@@ -38,7 +39,6 @@ public class Wetree {
         int webentity_count = 1;
         
         // Init
-        int currentweid = 1;
         ArrayList<String> stems = new ArrayList<>();
         stems.add("poney");
         stems.add("vache");
@@ -72,29 +72,28 @@ public class Wetree {
         
         while (webentity_count-- > 0) {
             
-            // Web entity prefix
-            String webentity_prefix = "";
-            int prefix_size = ThreadLocalRandom.current().nextInt(2, 5+1);
-            while (prefix_size-- > 0) {
-                webentity_prefix += stems.get(ThreadLocalRandom.current().nextInt(0, stems.size())) + "|";
-            }
-            
-            System.out.println("Web entity " + currentweid + " has prefixes:");
-            System.out.println(webentity_prefix);
-            
-            wem.addWebEntityPrefix(webentity_prefix, currentweid);
-            currentweid++;
-            
-            // Pages
-            int pages_count = 3;//ThreadLocalRandom.current().nextInt(1, 10+1) * ThreadLocalRandom.current().nextInt(1, 10+1) * ThreadLocalRandom.current().nextInt(1, 10+1) * ThreadLocalRandom.current().nextInt(1, 10+1);
-            while (pages_count-- > 0) {
-                String lru = webentity_prefix;
-                int suffix_size = ThreadLocalRandom.current().nextInt(1, 6+1);
-                while (suffix_size-- > 0) {
-                    lru += stems.get(ThreadLocalRandom.current().nextInt(0, stems.size())) + "|";
+            String[] prefixes = new String[ThreadLocalRandom.current().nextInt(1, 8)];
+            for (int i=0; i<prefixes.length; i++) {
+                String p = "";
+                int prefix_size = ThreadLocalRandom.current().nextInt(2, 5+1);
+                while (prefix_size-- > 0) {
+                    p += stems.get(ThreadLocalRandom.current().nextInt(0, stems.size())) + "|";
                 }
-                wem.addLru(lru);
-            }
+                prefixes[i] = p;
+                
+                // Pages
+                int pages_count = 3;//ThreadLocalRandom.current().nextInt(1, 10+1) * ThreadLocalRandom.current().nextInt(1, 10+1) * ThreadLocalRandom.current().nextInt(1, 10+1) * ThreadLocalRandom.current().nextInt(1, 10+1);
+                while (pages_count-- > 0) {
+                    String lru = p;
+                    int suffix_size = ThreadLocalRandom.current().nextInt(1, 6+1);
+                    while (suffix_size-- > 0) {
+                        lru += stems.get(ThreadLocalRandom.current().nextInt(0, stems.size())) + "|";
+                    }
+                    wem.addLru(lru);
+                }
+            }            
+            
+            wem.createWebEntity(prefixes);
         }
         
     }

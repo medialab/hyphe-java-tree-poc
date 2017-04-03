@@ -6,11 +6,23 @@
 package wetree;
 
 import com.google.common.primitives.Chars;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.RandomAccessFile;
+import java.io.Writer;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Stack;
 
 
@@ -23,8 +35,12 @@ public class WebEntitiesManager {
     private final String rootPath;
     private final RandomAccessFile lruTreeFile;
     private final RandomAccessFile linksFile;
-    private final RandomAccessFile webentitiesFile;
+    private final String webentitiesFileName;
     private long lastnodeid = 0;
+    
+    // Web Entity related stuff (not very important)
+    private List<WebEntity> webEntities = new ArrayList<>();
+    private int currentWebEntityId = 1;
     
     public WebEntitiesManager(String p) throws IOException{
         rootPath = p;
@@ -32,7 +48,7 @@ public class WebEntitiesManager {
         // Create files
         lruTreeFile = new RandomAccessFile(rootPath + "lrus.dat", "rw");
         linksFile = new RandomAccessFile(rootPath + "links.dat", "rw");
-        webentitiesFile = new RandomAccessFile(rootPath + "webentities.dat", "rw");
+        webentitiesFileName = rootPath + "webentities.json";
 
         init();
     }
@@ -45,6 +61,11 @@ public class WebEntitiesManager {
             lruTreeNode ltn = new lruTreeNode(lruTreeFile, lastnodeid++);
             ltn.setChar("s".charAt(0)); // Note: s is convenient for LRUs
             ltn.write();
+            
+            webEntities = new ArrayList<>();
+            currentWebEntityId = 1;
+        } else {
+            readWebEntities();
         }
     }
     
@@ -67,6 +88,35 @@ public class WebEntitiesManager {
         return nodeid;
     }
     
+    public void createWebEntity(String[] prefixes) throws IOException {
+        WebEntity we = new WebEntity();
+        we.setId(currentWebEntityId++);
+        we.setPrefixes(Arrays.asList(prefixes));
+        webEntities.add(we);
+        writeWebEntities();
+    }
+    
+    private void writeWebEntities() throws IOException {
+        try (Writer writer = new FileWriter(webentitiesFileName)) {
+            Gson gson = new GsonBuilder().setPrettyPrinting().create();
+            gson.toJson(webEntities, writer);
+        }
+    }
+    
+    private void readWebEntities() throws FileNotFoundException {
+        File f = new File(webentitiesFileName);
+        if(f.exists() && !f.isDirectory()) { 
+            Gson gson = new GsonBuilder().create();
+            BufferedReader br = new BufferedReader(new FileReader(webentitiesFileName));
+            Type type = new TypeToken<List<WebEntity>>(){}.getType();
+            webEntities = gson.fromJson(br, type);
+            webEntities.forEach(we->{
+                currentWebEntityId = Math.max(currentWebEntityId, we.getId());
+            });
+            currentWebEntityId++;
+        }
+    }
+     
     public long addWebEntityPrefix(String lru, int weid) throws IOException {
         // Add the lru to the lruTree
         long nodeid = add(lru);
