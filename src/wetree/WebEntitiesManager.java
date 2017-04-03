@@ -71,6 +71,7 @@ public class WebEntitiesManager {
     
     public void reset() throws IOException {
         lruTreeFile.setLength(0);
+        linkTreeFile.setLength(0);
         init();
     }
     
@@ -317,7 +318,6 @@ public class WebEntitiesManager {
     
     // Add a link stub
     private void addLinkStub(long node1id, long node2id, boolean direction) throws IOException {
-        System.out.println("Link stub from " + node1id + " to " + node2id + " ("+(direction?"straight":"reverse")+")");
         lruTreeNode lruNode = new lruTreeNode(lruTreeFile, node1id);
         long linksPointer = direction ? lruNode.getOutLinks() : lruNode.getInLinks();
         if (linksPointer > 0) {
@@ -329,6 +329,7 @@ public class WebEntitiesManager {
             }
             // Register the stub
             existingLinkNode.setNext(nextlinkid);
+            existingLinkNode.write();
             // Create the stub
             linkTreeNode linkNode = new linkTreeNode(linkTreeFile, nextlinkid);
             linkNode.setLru(node2id);
@@ -579,16 +580,6 @@ public class WebEntitiesManager {
                 System.out.print(" END");
             }
             
-            long outLinks = lruNode.getOutLinks();
-            if (outLinks > 0) {
-                System.out.print(" =link=>" + outLinks);
-            }
-            
-            long inLinks = lruNode.getInLinks();
-            if (inLinks > 0) {
-                System.out.print(" <=link=" + inLinks);
-            }
-
             long child = lruNode.getChild();
             if (child > 0) {
                 lruTreeNode childLruNode = new lruTreeNode(lruTreeFile, child);
@@ -600,17 +591,45 @@ public class WebEntitiesManager {
             if (nextSibling > 0) {
                 lruTreeNode nsLruNode = new lruTreeNode(lruTreeFile, nextSibling);
                 char nextSiblingC = nsLruNode.getChar();
-                System.out.print(" -sibl->" + nextSiblingC + "." + nextSibling);
+                System.out.print(" -sibling->" + nextSiblingC + "." + nextSibling);
             }
             
             long parent = lruNode.getParent();
             if (parent > 0) {
                 lruTreeNode parentLruNode = new lruTreeNode(lruTreeFile, parent);
                 char parentC = parentLruNode.getChar();
-                System.out.print(" <-parent-" + parentC + "." + parent + "(" + (lruNode.parentIsSibling() ? ("sibl") : ("par")) + ")");
+                System.out.print(" <-" + (lruNode.parentIsSibling() ? ("sibling") : ("parent")) + "-" + parentC + "." + parent);
             }
             
             System.out.println("");
+            
+            // Links
+            
+            long outLinks = lruNode.getOutLinks();
+            if (outLinks > 0) {
+                linkTreeNode linkNode = new linkTreeNode(linkTreeFile, outLinks);
+                System.out.println("  ==(" + outLinks + ")=> " + linkNode.getLru());
+                long next = linkNode.getNext();
+                while(next > 0) {
+                    linkNode.read(next);
+                    System.out.println("  ==(" + next + ")=> " + linkNode.getLru());
+                    next = linkNode.getNext();
+                }
+            }
+            
+            
+            long inLinks = lruNode.getInLinks();
+            if (inLinks > 0) {
+                linkTreeNode linkNode = new linkTreeNode(linkTreeFile, inLinks);
+                System.out.println("  <=(" + inLinks + ")== " + linkNode.getLru());
+                long next = linkNode.getNext();
+                while(next > 0) {
+                    linkNode.read(next);
+                    System.out.println("  <=(" + next + ")== " + linkNode.getLru());
+                    next = linkNode.getNext();
+                }
+            }
+
         }
     }
     

@@ -29,11 +29,12 @@ public class Wetree {
         wem.reset();
 //        buildFakeCorpus(wem);
         
-        wem.addLru("AA");
+        wem.addLru("A");
         wem.addLru("B");
         wem.addLru("C");
         
-        wem.addLink("AA", "B");
+        wem.addLink("A", "B");
+        wem.addLink("A", "C");
         wem.addLink("B", "C");
         
         wem.log();

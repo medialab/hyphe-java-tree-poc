@@ -22,7 +22,7 @@ public class linkTreeNode {
     private long nodeid;
     private byte[] bytes;
     
-    public linkTreeNode(RandomAccessFile file, long linkid) throws IOException {
+    public linkTreeNode(RandomAccessFile file, long nodeid) throws IOException {
         bytes = new byte[TREENODE_SIZE];
         this.file = file;
         this.nodeid = nodeid;
@@ -73,6 +73,10 @@ public class linkTreeNode {
     
     public long getNext() {
         return Longs.fromByteArray(Arrays.copyOfRange(bytes, TREENODE_OFFSET_NEXT, TREENODE_OFFSET_NEXT+8));
+    }
+    
+    public long getId() {
+        return nodeid;
     }
     
 }
