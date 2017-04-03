@@ -37,8 +37,9 @@ public class WebEntitiesManager {
     private final RandomAccessFile linksFile;
     private final String webentitiesFileName;
     private long lastnodeid = 0;
+    private long lastlinkid = 0;
     
-    // Web Entity related stuff (not very important)
+    // Web Entity related stuff (for convenience, but should be done elswhere)
     private List<WebEntity> webEntities = new ArrayList<>();
     private int currentWebEntityId = 1;
     
@@ -86,35 +87,6 @@ public class WebEntitiesManager {
         ltn.write();
         
         return nodeid;
-    }
-    
-    public void createWebEntity(String[] prefixes) throws IOException {
-        WebEntity we = new WebEntity();
-        we.setId(currentWebEntityId++);
-        we.setPrefixes(Arrays.asList(prefixes));
-        webEntities.add(we);
-        writeWebEntities();
-    }
-    
-    private void writeWebEntities() throws IOException {
-        try (Writer writer = new FileWriter(webentitiesFileName)) {
-            Gson gson = new GsonBuilder().setPrettyPrinting().create();
-            gson.toJson(webEntities, writer);
-        }
-    }
-    
-    private void readWebEntities() throws FileNotFoundException {
-        File f = new File(webentitiesFileName);
-        if(f.exists() && !f.isDirectory()) { 
-            Gson gson = new GsonBuilder().create();
-            BufferedReader br = new BufferedReader(new FileReader(webentitiesFileName));
-            Type type = new TypeToken<List<WebEntity>>(){}.getType();
-            webEntities = gson.fromJson(br, type);
-            webEntities.forEach(we->{
-                currentWebEntityId = Math.max(currentWebEntityId, we.getId());
-            });
-            currentWebEntityId++;
-        }
     }
      
     public long addWebEntityPrefix(String lru, int weid) throws IOException {
@@ -605,6 +577,36 @@ public class WebEntitiesManager {
             }
             
             System.out.println("");
+        }
+    }
+    
+    // Pure web entity helpers that should not really be part of this
+    public void createWebEntity(String[] prefixes) throws IOException {
+        WebEntity we = new WebEntity();
+        we.setId(currentWebEntityId++);
+        we.setPrefixes(Arrays.asList(prefixes));
+        webEntities.add(we);
+        writeWebEntities();
+    }
+    
+    private void writeWebEntities() throws IOException {
+        try (Writer writer = new FileWriter(webentitiesFileName)) {
+            Gson gson = new GsonBuilder().setPrettyPrinting().create();
+            gson.toJson(webEntities, writer);
+        }
+    }
+    
+    private void readWebEntities() throws FileNotFoundException {
+        File f = new File(webentitiesFileName);
+        if(f.exists() && !f.isDirectory()) { 
+            Gson gson = new GsonBuilder().create();
+            BufferedReader br = new BufferedReader(new FileReader(webentitiesFileName));
+            Type type = new TypeToken<List<WebEntity>>(){}.getType();
+            webEntities = gson.fromJson(br, type);
+            webEntities.forEach(we->{
+                currentWebEntityId = Math.max(currentWebEntityId, we.getId());
+            });
+            currentWebEntityId++;
         }
     }
     
