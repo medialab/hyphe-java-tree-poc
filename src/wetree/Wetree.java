@@ -29,15 +29,21 @@ public class Wetree {
         wem.reset();
 //        buildFakeCorpus(wem);
         
-        wem.addLru("A");
+        wem.addLru("AA");
         wem.addLru("B");
         wem.addLru("C");
         
-        wem.addLink("A", "B");
-        wem.addLink("A", "C");
+        wem.addLink("AA", "B");
+        wem.addLink("B", "AA");
+        wem.addLink("AA", "C");
         wem.addLink("B", "C");
         
-        wem.log();
+        ArrayList<String[]> links = wem._geAllLruLinks_SLOW();
+        System.out.println("Links:");
+        links.forEach(link->{
+            System.out.println(link[0] + " -> " + link[1]);
+        });
+//        wem.log();
 
     }
     

@@ -23,6 +23,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Stack;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
         
@@ -118,8 +120,8 @@ public class WebEntitiesManager {
         addLinkStub(targetnodeid, sourcenodeid, false);
     }
     
-    // Return all LRUs (walk all the tree)
-    public ArrayList<String> getLrus() throws IOException {
+    // Return all LRUs - walks all the tree, SLOW, mostly for monitoring
+    public ArrayList<String> _getAllLrus_SLOW() throws IOException {
         ArrayList<String> result = new ArrayList<>();
         
         // Let's casually walk in the tree depth first and store the lrus
@@ -181,8 +183,8 @@ public class WebEntitiesManager {
         return result;
     }
     
-    // Return all web entities (SLOW, mostly for monitoring)
-    public HashMap<Integer, ArrayList<String>> getWebEntities_SLOW() throws IOException {
+    // Return all web entities - walks all the tree, SLOW, mostly for monitoring
+    public HashMap<Integer, ArrayList<String>> _getAllWebEntities_SLOW() throws IOException {
         HashMap<Integer, ArrayList<String>> result = new HashMap<>();
         
         // Let's casually walk in the tree depth first and store the lrus
@@ -252,6 +254,91 @@ public class WebEntitiesManager {
         
         return result;
     }    
+    
+    public ArrayList<String[]> _geAllLruLinks_SLOW() throws IOException {
+        ArrayList<String[]> result = new ArrayList<>();
+        
+        // Let's casually walk in the tree depth first and store the lrus
+        
+        // Current string
+        Stack<Character> chars = new Stack<>();
+        
+        // Init
+        long nodeid = 0;
+        lruTreeNode lruNode = new lruTreeNode(lruTreeFile, nodeid);
+        chars.push(lruNode.getChar());
+        long child;
+        long nextSibling;
+        long parent;
+        boolean parentIsSibling;
+        boolean descending = true;
+        
+        // Walk: recursively inspect nodes depth first
+        while (chars.size() > 0) {
+            // Add LRU to the list
+            if (descending && lruNode.isEnding()) {
+                long outLinks = lruNode.getOutLinks();
+                if (outLinks > 0) {
+                    StringBuilder sb = new StringBuilder(chars.size());
+                    chars.forEach((c) -> {
+                        sb.append(c);
+                    });
+                    String sourceLru = sb.toString();
+                    // Follow the links
+                    ArrayList<Long> targetNodeIds = new ArrayList<>();
+                    linkTreeNode linkNode = new linkTreeNode(linkTreeFile, outLinks);
+                    targetNodeIds.add(linkNode.getLru());
+                    long next = linkNode.getNext();
+                    while(next > 0) {
+                        linkNode.read(next);
+                        targetNodeIds.add(linkNode.getLru());
+                        next = linkNode.getNext();
+                    }
+                    targetNodeIds.forEach(tnodeid->{
+                        try {
+                            String targetLru = windupLru(tnodeid);
+                            String[] link = new String[2];
+                            link[0] = sourceLru;
+                            link[1] = targetLru;
+                            result.add(link);
+                        } catch (IOException ex) {
+                            Logger.getLogger(WebEntitiesManager.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    });                    
+                }
+            }
+            
+            child = lruNode.getChild();
+            nextSibling = lruNode.getNextSibling();
+            if (descending && child > 0) {
+                nodeid = child;
+                lruNode.read(nodeid);
+                chars.push(lruNode.getChar());
+            } else if (nextSibling > 0) {
+                descending = true;
+                nodeid = nextSibling;
+                lruNode.read(nodeid);
+                chars.pop();
+                chars.push(lruNode.getChar());
+            } else {
+                descending = false;
+                parent = lruNode.getParent();
+                parentIsSibling = lruNode.parentIsSibling();
+                while(parentIsSibling) {
+                    nodeid = parent;
+                    lruNode.read(nodeid);
+                    parent = lruNode.getParent();
+                    parentIsSibling = lruNode.parentIsSibling();
+                }
+                nodeid = parent;
+                lruNode.read(nodeid);
+                chars.pop();
+            }
+            
+        }
+        
+        return result;
+    }
     
     // Return LRUs of a known web entity
     public ArrayList<String> getLrusFromWebEntity(String[] prefixes, int weid) throws IOException {
@@ -382,6 +469,29 @@ public class WebEntitiesManager {
             }
         }
         return -1;
+    }
+    
+    // Returns the lru of a node id
+    private String windupLru(long nodeid) throws IOException {
+        lruTreeNode lruNode = new lruTreeNode(lruTreeFile, nodeid);
+        
+        StringBuilder sb = new StringBuilder(1);
+        sb.append(lruNode.getChar());
+        String lru = sb.toString();
+        
+        while (lruNode.getParent() > 0) {
+            if (lruNode.parentIsSibling()) {
+                lruNode.read(lruNode.getParent());
+            } else {
+                sb = new StringBuilder(1);
+                sb.append(lruNode.getChar());
+                lru = sb.toString() + lru;
+                
+                lruNode.read(lruNode.getParent());
+            }
+        }
+        
+        return lru;
     }
     
     // Walk the tree from a given node id not following nodes with web entities
