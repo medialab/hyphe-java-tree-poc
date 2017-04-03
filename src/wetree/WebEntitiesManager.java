@@ -337,9 +337,9 @@ public class WebEntitiesManager {
         } else {
             // Register the stub
             if (direction) {
-                lruNode.setInLinks(nextlinkid);
-            } else {
                 lruNode.setOutLinks(nextlinkid);
+            } else {
+                lruNode.setInLinks(nextlinkid);
             }
             lruNode.write();
             // Create the stub
@@ -579,14 +579,14 @@ public class WebEntitiesManager {
                 System.out.print(" END");
             }
             
-            long linksFrom = lruNode.getOutLinks();
-            if (linksFrom > 0) {
-                System.out.print(" =link=>" + linksFrom);
+            long outLinks = lruNode.getOutLinks();
+            if (outLinks > 0) {
+                System.out.print(" =link=>" + outLinks);
             }
             
-            long linksTo = lruNode.getInLinks();
-            if (linksTo > 0) {
-                System.out.print(" <=link=" + linksTo);
+            long inLinks = lruNode.getInLinks();
+            if (inLinks > 0) {
+                System.out.print(" <=link=" + inLinks);
             }
 
             long child = lruNode.getChild();
