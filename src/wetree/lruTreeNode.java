@@ -18,9 +18,17 @@ import java.util.BitSet;
  * @author jacomyma
  */
 public class lruTreeNode {
-    public static final int TREENODE_DATASIZE = 29;
+    public static final int TREENODE_DATASIZE = 45;
     public static final int TREENODE_TEXTSIZE = 2; // char = 2 bytes
     public static final int TREENODE_SIZE = TREENODE_DATASIZE + TREENODE_TEXTSIZE;
+    // Offsets for the different byte zones
+    public static final int TREENODE_OFFSET_FLAGS = 0; // Length 1
+    public static final int TREENODE_OFFSET_PARENT = 1; // Length 8
+    public static final int TREENODE_OFFSET_NEXT_SIBLING = 9; // Length 8
+    public static final int TREENODE_OFFSET_CHILD = 17; // Length 8
+    public static final int TREENODE_OFFSET_WEB_ENTITY_ID = 25; // Length 4
+    public static final int TREENODE_OFFSET_LINKS_FROM = 29; // Length 8
+    public static final int TREENODE_OFFSET_LINKS_TO = 37; // Length 8
     private final RandomAccessFile file;
     private long nodeid;
     private byte[] bytes;
@@ -42,6 +50,8 @@ public class lruTreeNode {
     // bytes 9 to 16: next sibling (long)
     // bytes 17 to 24: child (long)
     // bytes 25 to 28: web entity id (int)
+    // bytes 29 to 36: links out (long)
+    // bytes 37 to 44: links in (long)
     
     public lruTreeNode(RandomAccessFile file, long nodeid) throws IOException {
         bytes = new byte[TREENODE_SIZE];
@@ -92,47 +102,69 @@ public class lruTreeNode {
     public void setParent(long parentid) {
         byte[] bytes = Longs.toByteArray(parentid);
         for(int i = 0; i<8; i++) {
-            this.bytes[1+i] = bytes[i];
+            this.bytes[TREENODE_OFFSET_PARENT+i] = bytes[i];
         }
     }
     
     public long getParent() {
-        return Longs.fromByteArray(Arrays.copyOfRange(bytes, 1, 9));
+        return Longs.fromByteArray(Arrays.copyOfRange(bytes, TREENODE_OFFSET_PARENT, TREENODE_OFFSET_PARENT+8));
     }
     
     public void setNextSibling(long parentid) {
         byte[] bytes = Longs.toByteArray(parentid);
         for(int i = 0; i<8; i++) {
-            this.bytes[9+i] = bytes[i];
+            this.bytes[TREENODE_OFFSET_NEXT_SIBLING+i] = bytes[i];
         }
     }
     
     public long getNextSibling() {
-        return Longs.fromByteArray(Arrays.copyOfRange(bytes, 9, 17));
+        return Longs.fromByteArray(Arrays.copyOfRange(bytes, TREENODE_OFFSET_NEXT_SIBLING, TREENODE_OFFSET_NEXT_SIBLING+8));
     }
     
     public void setChild(long childid) {
         byte[] bytes = Longs.toByteArray(childid);
         for(int i = 0; i<8; i++) {
-            this.bytes[17+i] = bytes[i];
+            this.bytes[TREENODE_OFFSET_CHILD+i] = bytes[i];
         }
     }
     
     public long getChild() {
-        return Longs.fromByteArray(Arrays.copyOfRange(bytes, 17, 25));
+        return Longs.fromByteArray(Arrays.copyOfRange(bytes, TREENODE_OFFSET_CHILD, TREENODE_OFFSET_CHILD+8));
     }
     
     public void setWebEntity(int weid) {
         byte[] bytes = Ints.toByteArray(weid);
         for(int i = 0; i<4; i++) {
-            this.bytes[25+i] = bytes[i];
+            this.bytes[TREENODE_OFFSET_WEB_ENTITY_ID+i] = bytes[i];
         }
     }
     
     public int getWebEntity() {
-        return Ints.fromByteArray(Arrays.copyOfRange(bytes, 25, 29));
+        return Ints.fromByteArray(Arrays.copyOfRange(bytes, TREENODE_OFFSET_WEB_ENTITY_ID, TREENODE_OFFSET_WEB_ENTITY_ID+4));
+    }
+
+    public void setLinksFrom(long pointer) {
+        byte[] bytes = Longs.toByteArray(pointer);
+        for(int i = 0; i<8; i++) {
+            this.bytes[TREENODE_OFFSET_LINKS_FROM+i] = bytes[i];
+        }
     }
     
+    public long getLinksFrom() {
+        return Longs.fromByteArray(Arrays.copyOfRange(bytes, TREENODE_OFFSET_LINKS_FROM, TREENODE_OFFSET_LINKS_FROM+8));
+    }
+    
+    public void setLinksTo(long pointer) {
+        byte[] bytes = Longs.toByteArray(pointer);
+        for(int i = 0; i<8; i++) {
+            this.bytes[TREENODE_OFFSET_LINKS_TO+i] = bytes[i];
+        }
+    }
+    
+    public long getLinksTo() {
+        return Longs.fromByteArray(Arrays.copyOfRange(bytes, TREENODE_OFFSET_LINKS_TO, TREENODE_OFFSET_LINKS_TO+8));
+    }
+        
     public BitSet getFlags() {
         return BitSet.valueOf(new byte[] { bytes[0] });
     }
@@ -140,9 +172,9 @@ public class lruTreeNode {
     public void setFlags(BitSet flags) {
         byte[] baflags = flags.toByteArray();
         if (baflags.length > 0) {
-            bytes[0] = flags.toByteArray()[0];
+            bytes[TREENODE_OFFSET_FLAGS] = flags.toByteArray()[0];
         } else {
-            bytes[0] = 0;
+            bytes[TREENODE_OFFSET_FLAGS] = 0;
         }
     }
     
