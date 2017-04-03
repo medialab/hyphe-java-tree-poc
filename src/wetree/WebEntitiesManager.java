@@ -159,8 +159,8 @@ public class WebEntitiesManager {
         return result;
     }
     
-    // Return all web entities (slow, mostly for monitoring)
-    public HashMap<Integer, ArrayList<String>> getWebEntities() throws IOException {
+    // Return all web entities (SLOW, mostly for monitoring)
+    public HashMap<Integer, ArrayList<String>> getWebEntities_SLOW() throws IOException {
         HashMap<Integer, ArrayList<String>> result = new HashMap<>();
         
         // Let's casually walk in the tree depth first and store the lrus
@@ -242,7 +242,7 @@ public class WebEntitiesManager {
                     "Prefix " + lru + " could not be found in the tree"
                 );
             } else {
-                suffixes = getLrus_webEntityBounded(nodeid);
+                suffixes = walkWebEntityForLrus(nodeid);
                 suffixes.forEach(suffix->{
                     result.add(lru + suffix);
                 });
@@ -314,7 +314,7 @@ public class WebEntitiesManager {
             char c = chars[i];
             byte[] charbytes = Chars.toByteArray(c);
             
-            nodeid = getTextFromNextSiblings(nodeid, charbytes);
+            nodeid = walkNextSiblingsForText(nodeid, charbytes);
             
             if (nodeid < 0) {
                 return -1;
@@ -340,7 +340,7 @@ public class WebEntitiesManager {
     // Walk the tree from a given node id not following nodes with web entities
     // Note: does not return the full strings but only starting from the nodeid
     //       ie. it returns the suffixes of the webentity prefix
-    private ArrayList<String> getLrus_webEntityBounded(long nodeid) throws IOException {
+    private ArrayList<String> walkWebEntityForLrus(long nodeid) throws IOException {
         ArrayList<String> result = new ArrayList<>();
         
         // A custom walk in the tree:
@@ -449,18 +449,18 @@ public class WebEntitiesManager {
             } else {
                 // We're at the end of the level (no more siblings).
                 // We create the required node and we bind it.
-                nodeid = createNewSibling(nodeid, charbytes);
+                nodeid = chainNewSibling(nodeid, charbytes);
                 return nodeid;
             }
         }
     }
     
-    // Walks next siblings for the specified text.
-    private long getTextFromNextSiblings(long nodeid, byte[] textbytes) throws IOException {
+    // Walks next siblings for specified text
+    private long walkNextSiblingsForText(long nodeid, byte[] charbytes) throws IOException {
         while (true) {
             lruTreeNode ltn = new lruTreeNode(lruTreeFile, nodeid);
             long nextSibling = ltn.getNextSibling();
-            if (compareCharByteArrays(textbytes, ltn.getCharBytes())) {
+            if (compareCharByteArrays(charbytes, ltn.getCharBytes())) {
                 // We found a matching node, nodeid is the good one.
                 return nodeid;
             } else if (nextSibling > 0) {
@@ -474,7 +474,7 @@ public class WebEntitiesManager {
     }
     
     // Get child or create it if no child
-    private long createChild(long nodeid, byte[] textbytes) throws IOException {
+    private long createChild(long nodeid, byte[] charbytes) throws IOException {
         lruTreeNode ltn = new lruTreeNode(lruTreeFile, nodeid);
         long child = ltn.getChild();
         if (child > 0) {
@@ -482,20 +482,20 @@ public class WebEntitiesManager {
                     "Node " + nodeid + " should not have a child already"
                 );
         } else {
-            nodeid = createNewChild(nodeid, textbytes);
+            nodeid = chainNewChild(nodeid, charbytes);
             return nodeid;
         }
     }
     
-    private long createNewSibling(long nodeid, byte[] charbytes) throws IOException {
-        return createNewChildOrSibling(nodeid, charbytes, true);
+    private long chainNewSibling(long nodeid, byte[] charbytes) throws IOException {
+        return chainNewChildOrSibling(nodeid, charbytes, true);
     }
     
-    private long createNewChild(long nodeid, byte[] charbytes) throws IOException {
-        return createNewChildOrSibling(nodeid, charbytes, false);
+    private long chainNewChild(long nodeid, byte[] charbytes) throws IOException {
+        return chainNewChildOrSibling(nodeid, charbytes, false);
     }
     
-    private long createNewChildOrSibling(long nodeid, byte[] charbytes, boolean isSibling) throws IOException {
+    private long chainNewChildOrSibling(long nodeid, byte[] charbytes, boolean isSibling) throws IOException {
         // Register chid/sibling
         lruTreeNode ltn = new lruTreeNode(lruTreeFile, nodeid);
         if (isSibling) {
