@@ -27,8 +27,8 @@ public class lruTreeNode {
     public static final int TREENODE_OFFSET_NEXT_SIBLING = 9; // Length 8
     public static final int TREENODE_OFFSET_CHILD = 17; // Length 8
     public static final int TREENODE_OFFSET_WEB_ENTITY_ID = 25; // Length 4
-    public static final int TREENODE_OFFSET_LINKS_FROM = 29; // Length 8
-    public static final int TREENODE_OFFSET_LINKS_TO = 37; // Length 8
+    public static final int TREENODE_OFFSET_LINKS_OUT = 29; // Length 8
+    public static final int TREENODE_OFFSET_LINKS_IN = 37; // Length 8
     private final RandomAccessFile file;
     private long nodeid;
     private byte[] bytes;
@@ -143,26 +143,26 @@ public class lruTreeNode {
         return Ints.fromByteArray(Arrays.copyOfRange(bytes, TREENODE_OFFSET_WEB_ENTITY_ID, TREENODE_OFFSET_WEB_ENTITY_ID+4));
     }
 
-    public void setLinksFrom(long pointer) {
+    public void setOutLinks(long pointer) {
         byte[] bytes = Longs.toByteArray(pointer);
         for(int i = 0; i<8; i++) {
-            this.bytes[TREENODE_OFFSET_LINKS_FROM+i] = bytes[i];
+            this.bytes[TREENODE_OFFSET_LINKS_OUT+i] = bytes[i];
         }
     }
     
-    public long getLinksFrom() {
-        return Longs.fromByteArray(Arrays.copyOfRange(bytes, TREENODE_OFFSET_LINKS_FROM, TREENODE_OFFSET_LINKS_FROM+8));
+    public long getOutLinks() {
+        return Longs.fromByteArray(Arrays.copyOfRange(bytes, TREENODE_OFFSET_LINKS_OUT, TREENODE_OFFSET_LINKS_OUT+8));
     }
     
-    public void setLinksTo(long pointer) {
+    public void setInLinks(long pointer) {
         byte[] bytes = Longs.toByteArray(pointer);
         for(int i = 0; i<8; i++) {
-            this.bytes[TREENODE_OFFSET_LINKS_TO+i] = bytes[i];
+            this.bytes[TREENODE_OFFSET_LINKS_IN+i] = bytes[i];
         }
     }
     
-    public long getLinksTo() {
-        return Longs.fromByteArray(Arrays.copyOfRange(bytes, TREENODE_OFFSET_LINKS_TO, TREENODE_OFFSET_LINKS_TO+8));
+    public long getInLinks() {
+        return Longs.fromByteArray(Arrays.copyOfRange(bytes, TREENODE_OFFSET_LINKS_IN, TREENODE_OFFSET_LINKS_IN+8));
     }
         
     public BitSet getFlags() {

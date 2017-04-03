@@ -319,7 +319,7 @@ public class WebEntitiesManager {
     private void addLinkStub(long node1id, long node2id, boolean direction) throws IOException {
         System.out.println("Link stub from " + node1id + " to " + node2id + " ("+(direction?"straight":"reverse")+")");
         lruTreeNode lruNode = new lruTreeNode(lruTreeFile, node1id);
-        long linksPointer = direction ? lruNode.getLinksFrom() : lruNode.getLinksTo();
+        long linksPointer = direction ? lruNode.getOutLinks() : lruNode.getInLinks();
         if (linksPointer > 0) {
             linkTreeNode existingLinkNode = new linkTreeNode(linkTreeFile, linksPointer);
             long next = existingLinkNode.getNext();
@@ -337,9 +337,9 @@ public class WebEntitiesManager {
         } else {
             // Register the stub
             if (direction) {
-                lruNode.setLinksTo(nextlinkid);
+                lruNode.setInLinks(nextlinkid);
             } else {
-                lruNode.setLinksFrom(nextlinkid);
+                lruNode.setOutLinks(nextlinkid);
             }
             lruNode.write();
             // Create the stub
@@ -579,12 +579,12 @@ public class WebEntitiesManager {
                 System.out.print(" END");
             }
             
-            long linksFrom = lruNode.getLinksFrom();
+            long linksFrom = lruNode.getOutLinks();
             if (linksFrom > 0) {
                 System.out.print(" =link=>" + linksFrom);
             }
             
-            long linksTo = lruNode.getLinksTo();
+            long linksTo = lruNode.getInLinks();
             if (linksTo > 0) {
                 System.out.print(" <=link=" + linksTo);
             }
