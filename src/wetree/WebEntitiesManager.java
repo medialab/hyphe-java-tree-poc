@@ -33,10 +33,10 @@ import java.util.Stack;
 public class WebEntitiesManager {
     private final String rootPath;
     private final RandomAccessFile lruTreeFile;
-    private final RandomAccessFile linksFile;
+    private final RandomAccessFile linkTreeFile;
     private final String webentitiesFileName;
-    private long lastnodeid = 0;
-    private long lastlinkid = 1;
+    private long nextnodeid = 1;
+    private long nextlinkid = 1;
     
     // Web Entity related stuff (for convenience, but should be done elswhere)
     private List<WebEntity> webEntities = new ArrayList<>();
@@ -47,7 +47,7 @@ public class WebEntitiesManager {
  
         // Create files
         lruTreeFile = new RandomAccessFile(rootPath + "lrus.dat", "rw");
-        linksFile = new RandomAccessFile(rootPath + "links.dat", "rw");
+        linkTreeFile = new RandomAccessFile(rootPath + "links.dat", "rw");
         webentitiesFileName = rootPath + "webentities.json";
 
         init();
@@ -58,7 +58,7 @@ public class WebEntitiesManager {
         if (lruTreeFile.length() == 0) {
             
             // Create a first node
-            lruTreeNode lruNode = new lruTreeNode(lruTreeFile, lastnodeid++);
+            lruTreeNode lruNode = new lruTreeNode(lruTreeFile, nextnodeid++);
             lruNode.setChar("s".charAt(0)); // Note: s is convenient for LRUs
             lruNode.write();
             
@@ -101,8 +101,8 @@ public class WebEntitiesManager {
     }
     
     public void addLink(String sourcelru, String targetlru) throws IOException {
-        long sourcenodeid = follow(sourcelru);
-        long targetnodeid = follow(targetlru);
+        long sourcenodeid = followLru(sourcelru);
+        long targetnodeid = followLru(targetlru);
         if (sourcenodeid < 0) {
             throw new java.lang.RuntimeException(
                 "Link add issue: " + sourcelru + " could not be found in the tree"
@@ -257,7 +257,7 @@ public class WebEntitiesManager {
         ArrayList<String> result = new ArrayList<>();
         ArrayList<String> suffixes;
         for (String lru : prefixes) {
-            long nodeid = follow(lru);
+            long nodeid = followLru(lru);
             if (nodeid < 0) {
                 throw new java.lang.RuntimeException(
                     "Prefix " + lru + " could not be found in the tree"
@@ -316,24 +316,40 @@ public class WebEntitiesManager {
     }
     
     // Add a link stub
-    private void addLinkStub(long nodeid, long linknodeid, boolean direction) throws IOException {
-        // TODO:
-        
-        lruTreeNode lruNode = new lruTreeNode(lruTreeFile, nodeid);
+    private void addLinkStub(long node1id, long node2id, boolean direction) throws IOException {
+        lruTreeNode lruNode = new lruTreeNode(lruTreeFile, node1id);
         long linksPointer = direction ? lruNode.getLinksFrom() : lruNode.getLinksTo();
         if (linksPointer > 0) {
-            
+            linkTreeNode existingLinkNode = new linkTreeNode(linkTreeFile, linksPointer);
+            long next = existingLinkNode.getNext();
+            while(next > 0) {
+                existingLinkNode.read(next);
+                next = existingLinkNode.getNext();
+            }
+            // Register the stub
+            existingLinkNode.setNext(nextlinkid);
+            // Create the stub
+            linkTreeNode linkNode = new linkTreeNode(linkTreeFile, nextlinkid);
+            linkNode.setLru(node2id);
+            linkNode.write();
+            nextlinkid++;
         } else {
-            
+            // Register the stub
+            if (direction) {
+                lruNode.setLinksTo(nextlinkid);
+            } else {
+                lruNode.setLinksFrom(nextlinkid);
+            }
+            // Create the stub
+            linkTreeNode linkNode = new linkTreeNode(linkTreeFile, nextlinkid);
+            linkNode.setLru(node2id);
+            linkNode.write();
+            nextlinkid++;
         }
-        // Look if there is a link mode node
-        // Create it if not
-        // Loop to children until end
-        // Add the pointer
     }
     
     // Returns the node id if the lru if it exists, -1 else
-    private long follow(String lru) throws IOException {
+    private long followLru(String lru) throws IOException {
         char[] chars = lru.toCharArray();
         long nodeid = 0;
         int i = 0;
@@ -526,20 +542,20 @@ public class WebEntitiesManager {
         // Register chid/sibling
         lruTreeNode lruNode = new lruTreeNode(lruTreeFile, nodeid);
         if (isSibling) {
-            lruNode.setNextSibling(lastnodeid);
+            lruNode.setNextSibling(nextnodeid);
         } else {
-            lruNode.setChild(lastnodeid);
+            lruNode.setChild(nextnodeid);
         }
         lruNode.write();
         
         // Create new node
-        long newnodeid = lastnodeid;
+        long newnodeid = nextnodeid;
         lruTreeNode newLruNode = new lruTreeNode(lruTreeFile, newnodeid);
         newLruNode.setCharBytes(charbytes);
         newLruNode.setParent(nodeid);
         newLruNode.setParentIsSibling(isSibling);
         newLruNode.write();
-        lastnodeid++;
+        nextnodeid++;
         return newnodeid;
     }
     
@@ -551,7 +567,7 @@ public class WebEntitiesManager {
     
     // A raw way to monitor the content of the tree
     public void log() throws IOException {
-        for(int i=0; i<lastnodeid; i++) {
+        for(int i=0; i<nextnodeid; i++) {
             lruTreeNode lruNode = new lruTreeNode(lruTreeFile, i);
             char c = lruNode.getChar();
             System.out.print(c + "#" + i);

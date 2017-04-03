@@ -34,7 +34,7 @@ public class lruTreeNode {
     private byte[] bytes;
     
     // Structure of a node :
-    // BLOCKDATASIZE bytes of metadata + BLOCKTEXTSIZE bytes of text
+    // TREENODE_DATASIZE bytes of metadata + TREENODE_TEXTSIZE bytes of text
     
     // Metadata bytes:
     // byte 0: flags
@@ -72,7 +72,7 @@ public class lruTreeNode {
     }
     
     public void write() throws IOException{
-        file.seek(nodeid * lruTreeNode.TREENODE_SIZE);
+        file.seek(nodeid * TREENODE_SIZE);
         file.write(bytes);
     }
         
