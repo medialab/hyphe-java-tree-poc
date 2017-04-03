@@ -27,13 +27,15 @@ public class Wetree {
         
         wem.reset();
         buildFakeCorpus(wem);
+        
+        wem.log();
 
     }
     
-    private static void buildFakeCorpus(WebEntitiesManager wet) throws IOException {
+    private static void buildFakeCorpus(WebEntitiesManager wem) throws IOException {
         // Build a fake corpus
         // Settings
-        int webentity_count = 3;
+        int webentity_count = 1;
         
         // Init
         int currentweid = 1;
@@ -80,18 +82,18 @@ public class Wetree {
             System.out.println("Web entity " + currentweid + " has prefixes:");
             System.out.println(webentity_prefix);
             
-            wet.addWebEntityPrefix(webentity_prefix, currentweid);
+            wem.addWebEntityPrefix(webentity_prefix, currentweid);
             currentweid++;
             
             // Pages
-            int pages_count = ThreadLocalRandom.current().nextInt(1, 10+1) * ThreadLocalRandom.current().nextInt(1, 10+1) * ThreadLocalRandom.current().nextInt(1, 10+1) * ThreadLocalRandom.current().nextInt(1, 10+1);
+            int pages_count = 3;//ThreadLocalRandom.current().nextInt(1, 10+1) * ThreadLocalRandom.current().nextInt(1, 10+1) * ThreadLocalRandom.current().nextInt(1, 10+1) * ThreadLocalRandom.current().nextInt(1, 10+1);
             while (pages_count-- > 0) {
                 String lru = webentity_prefix;
                 int suffix_size = ThreadLocalRandom.current().nextInt(1, 6+1);
                 while (suffix_size-- > 0) {
                     lru += stems.get(ThreadLocalRandom.current().nextInt(0, stems.size())) + "|";
                 }
-                wet.addLru(lru);
+                wem.addLru(lru);
             }
         }
         

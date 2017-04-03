@@ -5,16 +5,11 @@
  */
 package wetree;
 
-import com.google.common.base.Charsets;
 import com.google.common.primitives.Chars;
-import com.google.common.primitives.Ints;
-import com.google.common.primitives.Longs;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.BitSet;
 import java.util.HashMap;
 import java.util.Stack;
 
@@ -29,11 +24,6 @@ public class WebEntitiesManager {
     private RandomAccessFile lruTreeFile;
     private RandomAccessFile linksFile;
     private RandomAccessFile webentitiesFile;
-    private static final int BLOCKDATASIZE = 29;
-    private static final int BLOCKTEXTSIZE = 2; // char = 2 bytes
-    private static final int BLOCKSIZE = BLOCKDATASIZE + BLOCKTEXTSIZE;
-    private static final long BLOCKCOUNT = 1024 * 64;
-    private static final long FILESIZE = BLOCKSIZE * BLOCKCOUNT;
     private long lastblockid = 0;
     
     public WebEntitiesManager(String p) throws IOException{
@@ -51,9 +41,9 @@ public class WebEntitiesManager {
         if (lruTreeFile.length() == 0) {
             
             // Create a first node
-            byte[] block = new byte[BLOCKSIZE];
-            block_setChar(block, "s".charAt(0)); // Note: s is convenient for LRUs
-            block_new(block);
+            lruTreeNode ltn = new lruTreeNode(lruTreeFile, lastblockid++);
+            ltn.setChar("s".charAt(0)); // Note: s is convenient for LRUs
+            ltn.write();
         }
     }
     
@@ -63,25 +53,27 @@ public class WebEntitiesManager {
     }
     
     public long addLru(String lru) throws IOException {
+        // Add the lru to the lruTree
         long blockid = add(lru);
 
         // The last child has to get the ending marker.
         // It means "this branch is a string to retrieve"
         // as opposed to just traversing it as a part of a longer string
-        byte[] block = block_read(blockid);
-        block_setEnding(block, true);
-        block_update(blockid, block);
+        lruTreeNode ltn = new lruTreeNode(lruTreeFile, blockid);
+        ltn.setEnding(true);
+        ltn.write();
         
         return blockid;
     }
     
     public long addWebEntityPrefix(String lru, int weid) throws IOException {
+        // Add the lru to the lruTree
         long blockid = add(lru);
 
         // The last child has to get the ending marker
-        byte[] block = block_read(blockid);
-        block_setWebEntity(block, weid);
-        block_update(blockid, block);
+        lruTreeNode ltn = new lruTreeNode(lruTreeFile, blockid);
+        ltn.setWebEntity(weid);
+        ltn.write();
         
         return blockid;
     }
@@ -114,8 +106,8 @@ public class WebEntitiesManager {
         
         // Init
         long blockid = 0;
-        byte[] block = block_read(blockid);
-        chars.push(block_getChar(block));
+        lruTreeNode ltn = new lruTreeNode(lruTreeFile, blockid);
+        chars.push(ltn.getChar());
         long child;
         long nextSibling;
         long parent;
@@ -125,7 +117,7 @@ public class WebEntitiesManager {
         // Walk: recursively inspect blocks depth first
         while (chars.size() > 0) {
             // Add LRU to the list
-            if (descending && block_isEnding(block)) {
+            if (descending && ltn.isEnding()) {
                 StringBuilder sb = new StringBuilder(chars.size());
                 chars.forEach((c) -> {
                     sb.append(c);
@@ -134,30 +126,30 @@ public class WebEntitiesManager {
                 result.add(lru);
             }
             
-            child = block_getChild(block);
-            nextSibling = block_getNextSibling(block);
+            child = ltn.getChild();
+            nextSibling = ltn.getNextSibling();
             if (descending && child > 0) {
                 blockid = child;
-                block = block_read(blockid);
-                chars.push(block_getChar(block));
+                ltn.read(blockid);
+                chars.push(ltn.getChar());
             } else if (nextSibling > 0) {
                 descending = true;
                 blockid = nextSibling;
-                block = block_read(blockid);
+                ltn.read(blockid);
                 chars.pop();
-                chars.push(block_getChar(block));
+                chars.push(ltn.getChar());
             } else {
                 descending = false;
-                parent = block_getParent(block);
-                parentIsSibling = block_parentIsSibling(block);
+                parent = ltn.getParent();
+                parentIsSibling = ltn.parentIsSibling();
                 while(parentIsSibling) {
                     blockid = parent;
-                    block = block_read(blockid);
-                    parentIsSibling = block_parentIsSibling(block);
-                    parent = block_getParent(block);
+                    ltn.read(blockid);
+                    parent = ltn.getParent();
+                    parentIsSibling = ltn.parentIsSibling();
                 }
                 blockid = parent;
-                block = block_read(blockid);
+                ltn.read(blockid);
                 chars.pop();
             }
             
@@ -177,8 +169,8 @@ public class WebEntitiesManager {
         
         // Init
         long blockid = 0;
-        byte[] block = block_read(blockid);
-        chars.push(block_getChar(block));
+        lruTreeNode ltn = new lruTreeNode(lruTreeFile, blockid);
+        chars.push(ltn.getChar());
         long child;
         long nextSibling;
         long parent;
@@ -189,7 +181,7 @@ public class WebEntitiesManager {
         // Walk: recursively inspect blocks depth first
         while (chars.size() > 0) {
             // Add to results if needed
-            weid = block_getWebEntity(block);
+            weid = ltn.getWebEntity();
             if (descending && weid > 0) {
                 StringBuilder sb = new StringBuilder(chars.size());
                 chars.forEach((c) -> {
@@ -206,30 +198,30 @@ public class WebEntitiesManager {
                 }
             }
             
-            child = block_getChild(block);
-            nextSibling = block_getNextSibling(block);
+            child = ltn.getChild();
+            nextSibling = ltn.getNextSibling();
             if (descending && child > 0) {
                 blockid = child;
-                block = block_read(blockid);
-                chars.push(block_getChar(block));
+                ltn.read(blockid);
+                chars.push(ltn.getChar());
             } else if (nextSibling > 0) {
                 descending = true;
                 blockid = nextSibling;
-                block = block_read(blockid);
+                ltn.read(blockid);
                 chars.pop();
-                chars.push(block_getChar(block));
+                chars.push(ltn.getChar());
             } else {
                 descending = false;
-                parent = block_getParent(block);
-                parentIsSibling = block_parentIsSibling(block);
+                parent = ltn.getParent();
+                parentIsSibling = ltn.parentIsSibling();
                 while(parentIsSibling) {
                     blockid = parent;
-                    block = block_read(blockid);
-                    parentIsSibling = block_parentIsSibling(block);
-                    parent = block_getParent(block);
+                    ltn.read(blockid);
+                    parentIsSibling = ltn.parentIsSibling();
+                    parent = ltn.getParent();
                 }
                 blockid = parent;
-                block = block_read(blockid);
+                ltn.read(blockid);
                 chars.pop();
             }
             
@@ -264,7 +256,6 @@ public class WebEntitiesManager {
         long blockid = 0;
         int i = 0;
         while (i < chars.length) {
-            // Get the letter and check if its size is not an issue
             char c = chars[i];
             byte[] charbytes = Chars.toByteArray(c);
             
@@ -275,8 +266,8 @@ public class WebEntitiesManager {
             i++;
             
             // Is there a child?
-            byte[] block = block_read(blockid);
-            long child = block_getChild(block);
+            lruTreeNode ltn = new lruTreeNode(lruTreeFile, blockid);
+            long child = ltn.getChild();
             if (child > 0 && i < chars.length) {
                 // There's a child: search him and its siblings
                 blockid = child;
@@ -304,6 +295,8 @@ public class WebEntitiesManager {
     
     // Add a link stub
     private void addLinkStub(long blockid, long linkblockid, boolean direction) {
+        // TODO:
+        
         // Go to blockid
         // Look if there is a link mode node
         // Create it if not
@@ -329,8 +322,8 @@ public class WebEntitiesManager {
             i++;
 
             // Is there a child?
-            byte[] block = block_read(blockid);
-            long child = block_getChild(block);
+            lruTreeNode ltn = new lruTreeNode(lruTreeFile, blockid);
+            long child = ltn.getChild();
             if (child > 0) {
                 // There's a child: search him and its siblings
                 blockid = child;
@@ -356,7 +349,7 @@ public class WebEntitiesManager {
         Stack<Character> chars = new Stack<>();
         
         // Init
-        byte[] block = block_read(blockid);
+        lruTreeNode ltn = new lruTreeNode(lruTreeFile, blockid);
         long child;
         long nextSibling;
         long parent;
@@ -365,35 +358,33 @@ public class WebEntitiesManager {
         boolean ignore;
         
         // The starting LRU may be a word
-        if (block_isEnding(block)) {
+        if (ltn.isEnding()) {
             StringBuilder sb = new StringBuilder(chars.size());
-            chars.forEach((c) -> {
-                sb.append(c);
-            });
+            chars.forEach(sb::append);
             String lru = sb.toString();
             result.add(lru);
         }
         
         // If there is no child, it stops there
-        child = block_getChild(block);
+        child = ltn.getChild();
         if (child <= 0) {
             return result;
         }
         
         // Let's start the walk with the child
         blockid = child;
-        block = block_read(blockid);
-        chars.push(block_getChar(block));
+        ltn.read(blockid);
+        chars.push(ltn.getChar());
 
         
         // Walk: recursively inspect blocks depth first
         while (chars.size() > 0) {
             
             // We ignore blocks that have a web entity registered
-            ignore = block_getWebEntity(block) > 0;
+            ignore = ltn.getWebEntity() > 0;
                 
             // Add LRU to the list
-            if (descending && block_isEnding(block) && !ignore) {
+            if (descending && ltn.isEnding() && !ignore) {
                StringBuilder sb = new StringBuilder(chars.size());
                chars.forEach((c) -> {
                    sb.append(c);
@@ -409,30 +400,30 @@ public class WebEntitiesManager {
             String lru = sb.toString();
             
             
-            child = block_getChild(block);
-            nextSibling = block_getNextSibling(block);
+            child = ltn.getChild();
+            nextSibling = ltn.getNextSibling();
             if (descending && child > 0 && !ignore) {
                 blockid = child;
-                block = block_read(blockid);
-                chars.push(block_getChar(block));
+                ltn.read(blockid);
+                chars.push(ltn.getChar());
             } else if (nextSibling > 0) {
                 descending = true;
                 blockid = nextSibling;
-                block = block_read(blockid);
+                ltn.read(blockid);
                 chars.pop();
-                chars.push(block_getChar(block));
+                chars.push(ltn.getChar());
             } else {
                 descending = false;
-                parent = block_getParent(block);
-                parentIsSibling = block_parentIsSibling(block);
+                parent = ltn.getParent();
+                parentIsSibling = ltn.parentIsSibling();
                 while(parentIsSibling) {
                     blockid = parent;
-                    block = block_read(blockid);
-                    parentIsSibling = block_parentIsSibling(block);
-                    parent = block_getParent(block);
+                    ltn.read(blockid);
+                    parent = ltn.getParent();
+                    parentIsSibling = ltn.parentIsSibling();
                 }
                 blockid = parent;
-                block = block_read(blockid);
+                ltn.read(blockid);
                 chars.pop();
             }
             
@@ -446,9 +437,9 @@ public class WebEntitiesManager {
     // The search is only at the same level (looking for next siblings only).
     private long requireCharFromNextSiblings(long blockid, byte[] charbytes) throws IOException {
         while (true) {
-            byte[] block = block_read(blockid);
-            long nextSibling = block_getNextSibling(block);
-            if (compareCharByteArrays(charbytes, block_getCharBytes(block))) {
+            lruTreeNode ltn = new lruTreeNode(lruTreeFile, blockid);
+            long nextSibling = ltn.getNextSibling();
+            if (compareCharByteArrays(charbytes, ltn.getCharBytes())) {
                 // We found a matching node, blockid is the good one.
                 return blockid;
             } else if (nextSibling > 0) {
@@ -466,9 +457,9 @@ public class WebEntitiesManager {
     // Walks next siblings for the specified text.
     private long getTextFromNextSiblings(long blockid, byte[] textbytes) throws IOException {
         while (true) {
-            byte[] block = block_read(blockid);
-            long nextSibling = block_getNextSibling(block);
-            if (compareCharByteArrays(textbytes, block_getCharBytes(block))) {
+            lruTreeNode ltn = new lruTreeNode(lruTreeFile, blockid);
+            long nextSibling = ltn.getNextSibling();
+            if (compareCharByteArrays(textbytes, ltn.getCharBytes())) {
                 // We found a matching node, blockid is the good one.
                 return blockid;
             } else if (nextSibling > 0) {
@@ -483,8 +474,8 @@ public class WebEntitiesManager {
     
     // Get child or create it if no child
     private long createChild(long blockid, byte[] textbytes) throws IOException {
-        byte[] block = block_read(blockid);
-        long child = block_getChild(block);
+        lruTreeNode ltn = new lruTreeNode(lruTreeFile, blockid);
+        long child = ltn.getChild();
         if (child > 0) {
             throw new java.lang.RuntimeException(
                     "Node " + blockid + " should not have a child already"
@@ -518,168 +509,36 @@ public class WebEntitiesManager {
     
     private long block_newSibling(long blockid, byte[] charbytes) throws IOException {
         // Register sibling
-        byte[] block = block_read(blockid);
-        block_setNextSibling(block, lastblockid);
-        lruTreeFile.seek(blockid * BLOCKSIZE);
-        lruTreeFile.write(block);
+        lruTreeNode ltn = new lruTreeNode(lruTreeFile, blockid);
+        ltn.setNextSibling(lastblockid);
+        ltn.write();
         
         // Create new block
-        byte[] newblock = new byte[BLOCKSIZE];
-        block_setCharBytes(newblock, charbytes);
-        block_setParent(newblock, blockid);
-        block_setParentIsSibling(newblock, true);
-        long newblockid = block_new(newblock);
+        long newblockid = lastblockid;
+        lruTreeNode newLtn = new lruTreeNode(lruTreeFile, newblockid);
+        newLtn.setCharBytes(charbytes);
+        newLtn.setParent(blockid);
+        newLtn.setParentIsSibling(true);
+        newLtn.write();
+        lastblockid++;
         return newblockid;
     }
     
     private long block_newChild(long blockid, byte[] charbytes) throws IOException {
         // Register child
-        byte[] block = block_read(blockid);
-        block_setChild(block, lastblockid);
-        lruTreeFile.seek(blockid * BLOCKSIZE);
-        lruTreeFile.write(block);
+        lruTreeNode ltn = new lruTreeNode(lruTreeFile, blockid);
+        ltn.setChild(lastblockid);
+        ltn.write();
         
         // Create new block
-        byte[] newblock = new byte[BLOCKSIZE];
-        block_setCharBytes(newblock, charbytes);
-        block_setParent(newblock, blockid);
-        block_setParentIsSibling(newblock, false);
-        long newblockid = block_new(newblock);
+        long newblockid = lastblockid;
+        lruTreeNode newLtn = new lruTreeNode(lruTreeFile, newblockid);
+        newLtn.setCharBytes(charbytes);
+        newLtn.setParent(blockid);
+        newLtn.setParentIsSibling(false);
+        newLtn.write();
+        lastblockid++;
         return newblockid;
-    }
-    
-    private long block_new(byte[] block) throws IOException{
-        // System.out.println("Create new block at "+lastblockid);
-        // block_log(block);
-        lruTreeFile.seek(lastblockid * BLOCKSIZE);
-        lruTreeFile.write(block);
-        return lastblockid++;
-    }
-    
-    private byte[] block_read(long blockid) throws IOException {
-        lruTreeFile.seek(blockid * BLOCKSIZE);
-        byte[] bytes = new byte[BLOCKSIZE];
-        lruTreeFile.read(bytes);
-        return bytes;
-    }
-    
-    private void block_update(long blockid, byte[] block) throws IOException{
-        lruTreeFile.seek(blockid * BLOCKSIZE);
-        lruTreeFile.write(block);
-    }
-    
-    private void block_setChar(byte[] block, char c) {
-        byte[] charbytes = Chars.toByteArray(c);
-        block_setCharBytes(block, charbytes);
-    }
-            
-    private char block_getChar(byte[] block) {
-        return Chars.fromByteArray(block_getCharBytes(block));
-    }
-        
-    private void block_setCharBytes(byte[] block, byte[] charbytes) {
-        for (int i = 0; i < BLOCKTEXTSIZE; i++ ) {
-            if (i + 1 > charbytes.length) {
-                block[BLOCKDATASIZE + i] = 0;
-            } else {
-                block[BLOCKDATASIZE + i] = charbytes[i];
-            }
-        }
-    }
-
-    private byte[] block_getCharBytes(byte[] block) {
-        return Arrays.copyOfRange(block, BLOCKDATASIZE, BLOCKSIZE);
-    }
-    
-    private void block_setParent(byte[] block, long parentid) {
-        byte[] bytes = Longs.toByteArray(parentid);
-        for(int i = 0; i<8; i++) {
-            block[1+i] = bytes[i];
-        }
-    }
-    
-    private long block_getParent(byte[] block) {
-        return Longs.fromByteArray(Arrays.copyOfRange(block, 1, 9));
-    }
-    
-    private void block_setNextSibling(byte[] block, long parentid) {
-        byte[] bytes = Longs.toByteArray(parentid);
-        for(int i = 0; i<8; i++) {
-            block[9+i] = bytes[i];
-        }
-    }
-    
-    private long block_getNextSibling(byte[] block) {
-        return Longs.fromByteArray(Arrays.copyOfRange(block, 9, 17));
-    }
-    
-    private void block_setChild(byte[] block, long childid) {
-        byte[] bytes = Longs.toByteArray(childid);
-        for(int i = 0; i<8; i++) {
-            block[17+i] = bytes[i];
-        }
-    }
-    
-    private long block_getChild(byte[] block) {
-        return Longs.fromByteArray(Arrays.copyOfRange(block, 17, 25));
-    }
-    
-    private void block_setWebEntity(byte[] block, int weid) {
-        byte[] bytes = Ints.toByteArray(weid);
-        for(int i = 0; i<4; i++) {
-            block[25+i] = bytes[i];
-        }
-    }
-    
-    private int block_getWebEntity(byte[] block) {
-        return Ints.fromByteArray(Arrays.copyOfRange(block, 25, 29));
-    }
-    
-    private BitSet block_getFlags(byte[] block) {
-        return BitSet.valueOf(new byte[] { block[0] });
-    }
-    
-    private void block_setFlags(byte[] block, BitSet flags) {
-        byte[] baflags = flags.toByteArray();
-        if (baflags.length > 0) {
-            block[0] = flags.toByteArray()[0];
-        } else {
-            block[0] = 0;
-        }
-    }
-    
-    private boolean block_isFlag(byte[] block, int flagid) {
-        return block_getFlags(block).get(flagid);
-    }
-    
-    private void block_setFlag(byte[] block, int flagid, boolean e) {
-        BitSet flags = block_getFlags(block);
-        flags.set(flagid, e);
-        block_setFlags(block, flags);
-    }
-
-    private boolean block_isEnding(byte[] block) {
-        return block_isFlag(block, 0);
-    }
-    
-    private void block_setEnding(byte[] block, boolean e) {
-        block_setFlag(block, 0, e);
-    }
-    
-    private boolean block_parentIsSibling(byte[] block) {
-        return block_isFlag(block, 1);
-    }
-    
-    private void block_setParentIsSibling(byte[] block, boolean e) {
-        block_setFlag(block, 1, e);
-    }
-        
-    private void block_log(byte[] block) {
-        System.out.print("block (size " + block.length + "): ");
-        for(int i = 0; i<block.length; i++) {
-            System.out.print(" " + block[i]);
-        }
-        System.out.println("");
     }
     
     // Other
@@ -691,33 +550,33 @@ public class WebEntitiesManager {
     // A raw way to monitor the content of the tree
     public void log() throws IOException {
         for(int i=0; i<lastblockid; i++) {
-            byte[] block = block_read(i);
-            char c = block_getChar(block);
+            lruTreeNode ltn = new lruTreeNode(lruTreeFile, i);
+            char c = ltn.getChar();
             System.out.print(c + "#" + i);
             
-            if (block_isEnding(block)) {
+            if (ltn.isEnding()) {
                 System.out.print(" ENDING");
             }
             
-            long child = block_getChild(block);
+            long child = ltn.getChild();
             if (child > 0) {
-               byte[] childBlock = block_read(child);
-               char childC = block_getChar(childBlock);
-               System.out.print(" >child " + childC + "#" + child);
+                lruTreeNode childLtn = new lruTreeNode(lruTreeFile, child);
+                char childC = childLtn.getChar();
+                System.out.print(" >child " + childC + "#" + child);
             }
             
-            long nextSibling = block_getNextSibling(block);
+            long nextSibling = ltn.getNextSibling();
             if (nextSibling > 0) {
-               byte[] nextSiblingBlock = block_read(nextSibling);
-               char nextSiblingC = block_getChar(nextSiblingBlock);
-               System.out.print(" >nextSibling " + nextSiblingC + "#" + nextSibling);
+                lruTreeNode nsLtn = new lruTreeNode(lruTreeFile, nextSibling);
+                char nextSiblingC = nsLtn.getChar();
+                System.out.print(" >nextSibling " + nextSiblingC + "#" + nextSibling);
             }
             
-            long parent = block_getParent(block);
+            long parent = ltn.getParent();
             if (parent > 0) {
-               byte[] parentBlock = block_read(parent);
-               char parentC = block_getChar(parentBlock);
-               System.out.print(" >parent " + parentC + "#" + parent + "(" + (block_parentIsSibling(block) ? ("previous sibling") : ("parent")) + ")");
+                lruTreeNode parentLtn = new lruTreeNode(lruTreeFile, parent);
+                char parentC = parentLtn.getChar();
+                System.out.print(" >parent " + parentC + "#" + parent + "(" + (ltn.parentIsSibling() ? ("previous sibling") : ("parent")) + ")");
             }
             
             System.out.println("");
