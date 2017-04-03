@@ -18,11 +18,11 @@ import java.util.BitSet;
  * @author jacomyma
  */
 public class lruTreeNode {
-    public static final int BLOCKDATASIZE = 29;
-    public static final int BLOCKTEXTSIZE = 2; // char = 2 bytes
-    public static final int BLOCKSIZE = BLOCKDATASIZE + BLOCKTEXTSIZE;
+    public static final int TREENODE_DATASIZE = 29;
+    public static final int TREENODE_TEXTSIZE = 2; // char = 2 bytes
+    public static final int TREENODE_SIZE = TREENODE_DATASIZE + TREENODE_TEXTSIZE;
     private final RandomAccessFile file;
-    private long blockid;
+    private long nodeid;
     private byte[] bytes;
     
     // Structure of a node :
@@ -43,11 +43,11 @@ public class lruTreeNode {
     // bytes 17 to 24: child (long)
     // bytes 25 to 28: web entity id (int)
     
-    public lruTreeNode(RandomAccessFile file, long blockid) throws IOException {
-        bytes = new byte[BLOCKSIZE];
+    public lruTreeNode(RandomAccessFile file, long nodeid) throws IOException {
+        bytes = new byte[TREENODE_SIZE];
         this.file = file;
-        this.blockid = blockid;
-        file.seek(blockid * BLOCKSIZE);
+        this.nodeid = nodeid;
+        file.seek(nodeid * TREENODE_SIZE);
         file.read(bytes);
     }
 
@@ -55,19 +55,19 @@ public class lruTreeNode {
         return bytes;
     }
     
-    public void read(long blockid) throws IOException {
-        this.blockid = blockid;
-        file.seek(blockid * BLOCKSIZE);
+    public void read(long nodeid) throws IOException {
+        this.nodeid = nodeid;
+        file.seek(nodeid * TREENODE_SIZE);
         file.read(bytes);
     }
     
     public void write() throws IOException{
-        file.seek(blockid * lruTreeNode.BLOCKSIZE);
+        file.seek(nodeid * lruTreeNode.TREENODE_SIZE);
         file.write(bytes);
     }
         
-    public void moveTo(long blockid) {
-        this.blockid = blockid;
+    public void moveTo(long nodeid) {
+        this.nodeid = nodeid;
     }
 
     public void setChar(char c) {
@@ -80,13 +80,13 @@ public class lruTreeNode {
     }
         
     public void setCharBytes(byte[] charbytes) {
-        for (int i = 0; i < BLOCKTEXTSIZE; i++ ) {
-            bytes[BLOCKDATASIZE + i] = charbytes[i];
+        for (int i = 0; i < TREENODE_TEXTSIZE; i++ ) {
+            bytes[TREENODE_DATASIZE + i] = charbytes[i];
         }
     }
 
     public byte[] getCharBytes() {
-        return Arrays.copyOfRange(bytes, BLOCKDATASIZE, BLOCKSIZE);
+        return Arrays.copyOfRange(bytes, TREENODE_DATASIZE, TREENODE_SIZE);
     }
     
     public void setParent(long parentid) {
