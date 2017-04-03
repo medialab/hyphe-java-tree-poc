@@ -127,9 +127,9 @@ public class WebEntitiesManager {
             // Add LRU to the list
             if (descending && block_isEnding(block)) {
                 StringBuilder sb = new StringBuilder(chars.size());
-                for (Character c : chars) {
+                chars.forEach((c) -> {
                     sb.append(c);
-                }
+                });
                 String lru = sb.toString();
                 result.add(lru);
             }
@@ -192,9 +192,9 @@ public class WebEntitiesManager {
             weid = block_getWebEntity(block);
             if (descending && weid > 0) {
                 StringBuilder sb = new StringBuilder(chars.size());
-                for (Character c : chars) {
-                  sb.append(c);
-                }
+                chars.forEach((c) -> {
+                    sb.append(c);
+                });
                 String lru = sb.toString();
  
                 if (result.containsKey(weid)){
@@ -367,9 +367,9 @@ public class WebEntitiesManager {
         // The starting LRU may be a word
         if (block_isEnding(block)) {
             StringBuilder sb = new StringBuilder(chars.size());
-            for (Character c : chars) {
+            chars.forEach((c) -> {
                 sb.append(c);
-            }
+            });
             String lru = sb.toString();
             result.add(lru);
         }
@@ -395,17 +395,17 @@ public class WebEntitiesManager {
             // Add LRU to the list
             if (descending && block_isEnding(block) && !ignore) {
                StringBuilder sb = new StringBuilder(chars.size());
-                for (Character c : chars) {
-                  sb.append(c);
-                }
+               chars.forEach((c) -> {
+                   sb.append(c);
+                });
                 String lru = sb.toString();
                 result.add(lru);
             }
             
             StringBuilder sb = new StringBuilder(chars.size());
-            for (Character c : chars) {
-              sb.append(c);
-            }
+            chars.forEach((c) -> {
+                sb.append(c);
+            });
             String lru = sb.toString();
             
             
