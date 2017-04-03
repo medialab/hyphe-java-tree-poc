@@ -15,7 +15,6 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.io.RandomAccessFile;
 import java.io.Writer;
 import java.lang.reflect.Type;
@@ -317,10 +316,11 @@ public class WebEntitiesManager {
     }
     
     // Add a link stub
-    private void addLinkStub(long nodeid, long linknodeid, boolean direction) {
+    private void addLinkStub(long nodeid, long linknodeid, boolean direction) throws IOException {
         // TODO:
         
         // Go to nodeid
+        lruTreeNode ltn = new lruTreeNode(lruTreeFile, nodeid);
         // Look if there is a link mode node
         // Create it if not
         // Loop to children until end
