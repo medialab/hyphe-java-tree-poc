@@ -19,7 +19,7 @@ public class Wetree {
      * @param args the command line arguments
      */
     public static void main(String[] args) throws IOException {
-        String path = "D:\\temp\\TEST_WETREE.dat";
+        String path = "D:\\temp\\";
         
         WebEntitiesManager wem;
         wem = new WebEntitiesManager(path);

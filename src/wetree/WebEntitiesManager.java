@@ -25,8 +25,10 @@ import java.util.Stack;
  * @author jacomyma
  */
 public class WebEntitiesManager {
-    private final String path;
-    private RandomAccessFile file;
+    private final String rootPath;
+    private RandomAccessFile lruTreeFile;
+    private RandomAccessFile linksFile;
+    private RandomAccessFile webentitiesFile;
     private static final int BLOCKDATASIZE = 29;
     private static final int BLOCKTEXTSIZE = 2; // char = 2 bytes
     private static final int BLOCKSIZE = BLOCKDATASIZE + BLOCKTEXTSIZE;
@@ -35,17 +37,18 @@ public class WebEntitiesManager {
     private long lastblockid = 0;
     
     public WebEntitiesManager(String p) throws IOException{
-        path = p;
+        rootPath = p;
         init();
     }
     
     private void init() throws IOException {
-        // Create a file
-        file = new RandomAccessFile(path, "rw");
+        // Create files
+        lruTreeFile = new RandomAccessFile(rootPath + "lrus.dat", "rw");
+        linksFile = new RandomAccessFile(rootPath + "links.dat", "rw");
+        webentitiesFile = new RandomAccessFile(rootPath + "webentities.dat", "rw");
         
         // Keep init only if file empty
-        if (file.length() == 0) {
-            file.setLength(FILESIZE);
+        if (lruTreeFile.length() == 0) {
             
             // Create a first node
             byte[] block = new byte[BLOCKSIZE];
@@ -55,7 +58,7 @@ public class WebEntitiesManager {
     }
     
     public void reset() throws IOException {
-        file.setLength(0);
+        lruTreeFile.setLength(0);
         init();
     }
     
@@ -517,8 +520,8 @@ public class WebEntitiesManager {
         // Register sibling
         byte[] block = block_read(blockid);
         block_setNextSibling(block, lastblockid);
-        file.seek(blockid * BLOCKSIZE);
-        file.write(block);
+        lruTreeFile.seek(blockid * BLOCKSIZE);
+        lruTreeFile.write(block);
         
         // Create new block
         byte[] newblock = new byte[BLOCKSIZE];
@@ -533,8 +536,8 @@ public class WebEntitiesManager {
         // Register child
         byte[] block = block_read(blockid);
         block_setChild(block, lastblockid);
-        file.seek(blockid * BLOCKSIZE);
-        file.write(block);
+        lruTreeFile.seek(blockid * BLOCKSIZE);
+        lruTreeFile.write(block);
         
         // Create new block
         byte[] newblock = new byte[BLOCKSIZE];
@@ -548,21 +551,21 @@ public class WebEntitiesManager {
     private long block_new(byte[] block) throws IOException{
         // System.out.println("Create new block at "+lastblockid);
         // block_log(block);
-        file.seek(lastblockid * BLOCKSIZE);
-        file.write(block);
+        lruTreeFile.seek(lastblockid * BLOCKSIZE);
+        lruTreeFile.write(block);
         return lastblockid++;
     }
     
     private byte[] block_read(long blockid) throws IOException {
-        file.seek(blockid * BLOCKSIZE);
+        lruTreeFile.seek(blockid * BLOCKSIZE);
         byte[] bytes = new byte[BLOCKSIZE];
-        file.read(bytes);
+        lruTreeFile.read(bytes);
         return bytes;
     }
     
     private void block_update(long blockid, byte[] block) throws IOException{
-        file.seek(blockid * BLOCKSIZE);
-        file.write(block);
+        lruTreeFile.seek(blockid * BLOCKSIZE);
+        lruTreeFile.write(block);
     }
     
     private void block_setChar(byte[] block, char c) {
