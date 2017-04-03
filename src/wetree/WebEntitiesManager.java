@@ -24,7 +24,7 @@ import java.util.Stack;
  *
  * @author jacomyma
  */
-public class WebEntityTree {
+public class WebEntitiesManager {
     private final String path;
     private RandomAccessFile file;
     private static final int BLOCKDATASIZE = 29;
@@ -34,7 +34,7 @@ public class WebEntityTree {
     private static final long FILESIZE = BLOCKSIZE * BLOCKCOUNT;
     private long lastblockid = 0;
     
-    public WebEntityTree(String p) throws IOException{
+    public WebEntitiesManager(String p) throws IOException{
         path = p;
         init();
     }

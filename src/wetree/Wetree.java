@@ -5,13 +5,9 @@
  */
 package wetree;
 
-import com.google.common.primitives.Chars;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
@@ -25,68 +21,15 @@ public class Wetree {
     public static void main(String[] args) throws IOException {
         String path = "D:\\temp\\TEST_WETREE.dat";
         
-        WebEntityTree wet;
-        wet = new WebEntityTree(path);
+        WebEntitiesManager wem;
+        wem = new WebEntitiesManager(path);
         
-        wet.reset();
-        buildFakeCorpus(wet);
+        wem.reset();
+        buildFakeCorpus(wem);
 
-//        // Log web entities
-//        HashMap<Integer, ArrayList<String>> webentities = wet.getWebEntities();
-//        webentities.forEach((weid, prefixes)->{
-//            System.out.println("Web entity "+weid+" prefixes:");
-//            prefixes.forEach(lru->{
-//               System.out.println("  > " + lru); 
-//            });
-//        });
-        
-//        // Display all LRUs
-//        ArrayList<String> lrus = wet.getLrus();
-//        System.out.println(lrus.size() + " lrus in the file");
-//        lrus.forEach(lru -> {
-//            System.out.println(lru + " (" + lru.length() + ")");
-//        });
-        
-//        // List the LRUs of a web entity
-//        String[] prefixes = new String[1];
-//        prefixes[0] = "pou|loup|ver|grenouille|";
-//        wet.getLrusFromWebEntity(prefixes, 6201).forEach(lru -> {
-//            System.out.println(lru);
-//        });
-        
-        /*
-        // Build web entity 1
-        String[] we1prefixes = new String[3];
-        we1prefixes[0] = "com|google|";
-        we1prefixes[1] = "com|google|maps|";
-        we1prefixes[2] = "fr|google|";
-
-        // Build web entity 2
-        String[] we2prefixes = new String[2];
-        we2prefixes[0] = "com|google|images";
-        we2prefixes[1] = "fr|google|images";
-
-        // Store web entities
-        for(String lru : we1prefixes) {
-            wet.addWebEntityPrefix(lru, 1);
-        }
-        for(String lru : we2prefixes) {
-            wet.addWebEntityPrefix(lru, 2);
-        }
-        
-        wet.addLru("com|google|home|");
-        wet.addLru("com|google|maps|");
-        wet.addLru("com|google|maps|home");
-        wet.addLru("fr|google|home");
-        wet.addLru("com|google|images");
-        wet.addLru("com|google|images|home");
-        wet.addLru("fr|google|images|home");
-        
-        wet.log();
-        */        
     }
     
-    private static void buildFakeCorpus(WebEntityTree wet) throws IOException {
+    private static void buildFakeCorpus(WebEntitiesManager wet) throws IOException {
         // Build a fake corpus
         // Settings
         int webentity_count = 3;
