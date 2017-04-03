@@ -27,9 +27,16 @@ public class Wetree {
         wem = new WebEntitiesManager(path);
         
         wem.reset();
-        buildFakeCorpus(wem);
+//        buildFakeCorpus(wem);
         
-//        wem.log();
+        wem.addLru("AA");
+        wem.addLru("B");
+        wem.addLru("C");
+        
+        wem.addLink("AA", "B");
+        wem.addLink("B", "C");
+        
+        wem.log();
 
     }
     

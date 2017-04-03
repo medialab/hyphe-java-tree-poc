@@ -317,6 +317,7 @@ public class WebEntitiesManager {
     
     // Add a link stub
     private void addLinkStub(long node1id, long node2id, boolean direction) throws IOException {
+        System.out.println("Link stub from " + node1id + " to " + node2id + " ("+(direction?"straight":"reverse")+")");
         lruTreeNode lruNode = new lruTreeNode(lruTreeFile, node1id);
         long linksPointer = direction ? lruNode.getLinksFrom() : lruNode.getLinksTo();
         if (linksPointer > 0) {
@@ -348,12 +349,13 @@ public class WebEntitiesManager {
         }
     }
     
-    // Returns the node id if the lru if it exists, -1 else
+    // Returns the node id of the lru if it exists, -1 else
     private long followLru(String lru) throws IOException {
         char[] chars = lru.toCharArray();
+        if (chars.length == 0) return -1;
         long nodeid = 0;
         int i = 0;
-        while (i < chars.length - 1) {
+        while (i < chars.length) {
             char c = chars[i];
             byte[] charbytes = Chars.toByteArray(c);
             
@@ -373,11 +375,11 @@ public class WebEntitiesManager {
                 nodeid = child;
             } else {
                 // There is no child while there should be
-                return -1;
+                if (i == chars.length) return nodeid;
+                else return -1;
             }
         }
-        
-        return nodeid;
+        return -1;
     }
     
     // Walk the tree from a given node id not following nodes with web entities
@@ -498,7 +500,7 @@ public class WebEntitiesManager {
         }
     }
     
-    // Walks next siblings for specified text
+    // Walks starting point to next siblings for specified text
     private long walkNextSiblingsForText(long nodeid, byte[] charbytes) throws IOException {
         while (true) {
             lruTreeNode lruNode = new lruTreeNode(lruTreeFile, nodeid);
@@ -570,31 +572,41 @@ public class WebEntitiesManager {
         for(int i=0; i<nextnodeid; i++) {
             lruTreeNode lruNode = new lruTreeNode(lruTreeFile, i);
             char c = lruNode.getChar();
-            System.out.print(c + "#" + i);
+            System.out.print(c + "." + i);
             
             if (lruNode.isEnding()) {
-                System.out.print(" ENDING");
+                System.out.print(" END");
             }
             
+            long linksFrom = lruNode.getLinksFrom();
+            if (linksFrom > 0) {
+                System.out.print(" =link=>" + linksFrom);
+            }
+            
+            long linksTo = lruNode.getLinksTo();
+            if (linksTo > 0) {
+                System.out.print(" <=link=" + linksTo);
+            }
+
             long child = lruNode.getChild();
             if (child > 0) {
                 lruTreeNode childLruNode = new lruTreeNode(lruTreeFile, child);
                 char childC = childLruNode.getChar();
-                System.out.print(" >child " + childC + "#" + child);
+                System.out.print(" -child->" + childC + "." + child);
             }
             
             long nextSibling = lruNode.getNextSibling();
             if (nextSibling > 0) {
                 lruTreeNode nsLruNode = new lruTreeNode(lruTreeFile, nextSibling);
                 char nextSiblingC = nsLruNode.getChar();
-                System.out.print(" >nextSibling " + nextSiblingC + "#" + nextSibling);
+                System.out.print(" -sibl->" + nextSiblingC + "." + nextSibling);
             }
             
             long parent = lruNode.getParent();
             if (parent > 0) {
                 lruTreeNode parentLruNode = new lruTreeNode(lruTreeFile, parent);
                 char parentC = parentLruNode.getChar();
-                System.out.print(" >parent " + parentC + "#" + parent + "(" + (lruNode.parentIsSibling() ? ("previous sibling") : ("parent")) + ")");
+                System.out.print(" <-parent-" + parentC + "." + parent + "(" + (lruNode.parentIsSibling() ? ("sibl") : ("par")) + ")");
             }
             
             System.out.println("");
