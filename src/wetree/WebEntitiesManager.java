@@ -341,22 +341,26 @@ public class WebEntitiesManager {
     }
     
     // Return LRUs of a known web entity
-    public ArrayList<String> getLrusFromWebEntity(String[] prefixes, int weid) throws IOException {
+    public ArrayList<String> getLrusFromWebEntity(List<String> prefixes, int weid) throws IOException {
         ArrayList<String> result = new ArrayList<>();
-        ArrayList<String> suffixes;
-        for (String lru : prefixes) {
-            long nodeid = followLru(lru);
-            if (nodeid < 0) {
-                throw new java.lang.RuntimeException(
-                    "Prefix " + lru + " could not be found in the tree"
-                );
-            } else {
-                suffixes = walkWebEntityForLrus(nodeid);
-                suffixes.forEach(suffix->{
-                    result.add(lru + suffix);
-                });
+        prefixes.forEach(lru->{
+            long nodeid;
+            try {
+                nodeid = followLru(lru);
+                if (nodeid < 0) {
+                    throw new java.lang.RuntimeException(
+                        "Prefix '" + lru + "' could not be found in the tree"
+                    );
+                } else {
+                    ArrayList<String> suffixes = walkWebEntityForLrus(nodeid);
+                    suffixes.forEach(suffix->{
+                        result.add(lru + suffix);
+                    });
+                }
+            } catch (IOException ex) {
+                Logger.getLogger(WebEntitiesManager.class.getName()).log(Level.SEVERE, null, ex);
             }
-        }
+        });
         return result;
     }
     
@@ -444,31 +448,31 @@ public class WebEntitiesManager {
         if (chars.length == 0) return -1;
         long nodeid = 0;
         int i = 0;
+        
         while (i < chars.length) {
             char c = chars[i];
             byte[] charbytes = Chars.toByteArray(c);
             
+            // Search for i-th char from nodeid and its next siblings
             nodeid = walkNextSiblingsForText(nodeid, charbytes);
+            if (nodeid < 0) return -1; // Return unfound if so
             
-            if (nodeid < 0) {
-                return -1;
-            }
-            
+            // The char has been found.
+            // If we need to go deeper, then we must ensure there is a child.
             i++;
-
-            // Is there a child?
-            LruTreeNode lruNode = new LruTreeNode(lruTreeFile, nodeid);
-            long child = lruNode.getChild();
-            if (child > 0) {
-                // There's a child: search him and its siblings
-                nodeid = child;
-            } else {
-                // There is no child while there should be
-                if (i == chars.length) return nodeid;
-                else return -1;
+            if (i < chars.length) {
+                // Is there a child?
+                LruTreeNode lruNode = new LruTreeNode(lruTreeFile, nodeid);
+                long child = lruNode.getChild();
+                if (child > 0) {
+                    nodeid = child;
+                } else {
+                    // There is no child while there should be
+                    return -1;
+                }
             }
         }
-        return -1;
+        return nodeid;
     }
     
     // Returns the lru of a node id

@@ -9,6 +9,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -71,11 +73,21 @@ public class Wetree {
         System.out.println("\nWeb Entities:");
         ArrayList<WebEntity> wes = (ArrayList<WebEntity>) wem.webentity_getAll();
         wes.forEach(we->{
-            System.out.print("- ");
-            we.getPrefixes().forEach(p->{
-                System.out.print(p + " ");
-            });
-            System.out.println();
+            try {
+                System.out.print("- ");
+                we.getPrefixes().forEach(p->{
+                    System.out.print(p + " ");
+                });
+                System.out.println();
+                
+                System.out.println("  LRUs:");
+                ArrayList<String> lrus = wem.getLrusFromWebEntity(we.getPrefixes(), we.getId());
+                lrus.forEach(lru->{
+                    System.out.println("  - " + lru);
+                });
+            } catch (IOException ex) {
+                Logger.getLogger(Wetree.class.getName()).log(Level.SEVERE, null, ex);
+            }
         });
         
         ArrayList<String[]> links = wem._geAllLruLinks_SLOW();
