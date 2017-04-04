@@ -60,7 +60,7 @@ public class WebEntitiesManager {
         if (lruTreeFile.length() == 0) {
             
             // Create a first node
-            lruTreeNode lruNode = new lruTreeNode(lruTreeFile, nextnodeid++);
+            LruTreeNode lruNode = new LruTreeNode(lruTreeFile, nextnodeid++);
             lruNode.setChar("s".charAt(0)); // Note: s is convenient for LRUs
             lruNode.write();
             
@@ -84,7 +84,7 @@ public class WebEntitiesManager {
         // The last child has to get the ending marker.
         // It means "this branch is a string to retrieve"
         // as opposed to just traversing it as a part of a longer string
-        lruTreeNode lruNode = new lruTreeNode(lruTreeFile, nodeid);
+        LruTreeNode lruNode = new LruTreeNode(lruTreeFile, nodeid);
         lruNode.setEnding(true);
         lruNode.write();
         
@@ -96,7 +96,7 @@ public class WebEntitiesManager {
         long nodeid = add(lru);
 
         // The last child has to get the ending marker
-        lruTreeNode lruNode = new lruTreeNode(lruTreeFile, nodeid);
+        LruTreeNode lruNode = new LruTreeNode(lruTreeFile, nodeid);
         lruNode.setWebEntity(weid);
         lruNode.write();
         
@@ -131,7 +131,7 @@ public class WebEntitiesManager {
         
         // Init
         long nodeid = 0;
-        lruTreeNode lruNode = new lruTreeNode(lruTreeFile, nodeid);
+        LruTreeNode lruNode = new LruTreeNode(lruTreeFile, nodeid);
         chars.push(lruNode.getChar());
         long child;
         long nextSibling;
@@ -194,7 +194,7 @@ public class WebEntitiesManager {
         
         // Init
         long nodeid = 0;
-        lruTreeNode lruNode = new lruTreeNode(lruTreeFile, nodeid);
+        LruTreeNode lruNode = new LruTreeNode(lruTreeFile, nodeid);
         chars.push(lruNode.getChar());
         long child;
         long nextSibling;
@@ -265,7 +265,7 @@ public class WebEntitiesManager {
         
         // Init
         long nodeid = 0;
-        lruTreeNode lruNode = new lruTreeNode(lruTreeFile, nodeid);
+        LruTreeNode lruNode = new LruTreeNode(lruTreeFile, nodeid);
         chars.push(lruNode.getChar());
         long child;
         long nextSibling;
@@ -286,7 +286,7 @@ public class WebEntitiesManager {
                     String sourceLru = sb.toString();
                     // Follow the links
                     ArrayList<Long> targetNodeIds = new ArrayList<>();
-                    linkTreeNode linkNode = new linkTreeNode(linkTreeFile, outLinks);
+                    LinkTreeNode linkNode = new LinkTreeNode(linkTreeFile, outLinks);
                     targetNodeIds.add(linkNode.getLru());
                     long next = linkNode.getNext();
                     while(next > 0) {
@@ -376,7 +376,7 @@ public class WebEntitiesManager {
             i++;
             
             // Is there a child?
-            lruTreeNode lruNode = new lruTreeNode(lruTreeFile, nodeid);
+            LruTreeNode lruNode = new LruTreeNode(lruTreeFile, nodeid);
             long child = lruNode.getChild();
             if (child > 0 && i < chars.length) {
                 // There's a child: search him and its siblings
@@ -405,10 +405,10 @@ public class WebEntitiesManager {
     
     // Add a link stub
     private void addLinkStub(long node1id, long node2id, boolean direction) throws IOException {
-        lruTreeNode lruNode = new lruTreeNode(lruTreeFile, node1id);
+        LruTreeNode lruNode = new LruTreeNode(lruTreeFile, node1id);
         long linksPointer = direction ? lruNode.getOutLinks() : lruNode.getInLinks();
         if (linksPointer > 0) {
-            linkTreeNode existingLinkNode = new linkTreeNode(linkTreeFile, linksPointer);
+            LinkTreeNode existingLinkNode = new LinkTreeNode(linkTreeFile, linksPointer);
             long next = existingLinkNode.getNext();
             while(next > 0) {
                 existingLinkNode.read(next);
@@ -418,7 +418,7 @@ public class WebEntitiesManager {
             existingLinkNode.setNext(nextlinkid);
             existingLinkNode.write();
             // Create the stub
-            linkTreeNode linkNode = new linkTreeNode(linkTreeFile, nextlinkid);
+            LinkTreeNode linkNode = new LinkTreeNode(linkTreeFile, nextlinkid);
             linkNode.setLru(node2id);
             linkNode.write();
             nextlinkid++;
@@ -431,7 +431,7 @@ public class WebEntitiesManager {
             }
             lruNode.write();
             // Create the stub
-            linkTreeNode linkNode = new linkTreeNode(linkTreeFile, nextlinkid);
+            LinkTreeNode linkNode = new LinkTreeNode(linkTreeFile, nextlinkid);
             linkNode.setLru(node2id);
             linkNode.write();
             nextlinkid++;
@@ -457,7 +457,7 @@ public class WebEntitiesManager {
             i++;
 
             // Is there a child?
-            lruTreeNode lruNode = new lruTreeNode(lruTreeFile, nodeid);
+            LruTreeNode lruNode = new LruTreeNode(lruTreeFile, nodeid);
             long child = lruNode.getChild();
             if (child > 0) {
                 // There's a child: search him and its siblings
@@ -473,12 +473,12 @@ public class WebEntitiesManager {
     
     // Returns the lru of a node id
     private String windupLru(long nodeid) throws IOException {
-        lruTreeNode lruNode;
+        LruTreeNode lruNode;
         StringBuilder sb;
         String lru = "";
         
         do {
-            lruNode = new lruTreeNode(lruTreeFile, nodeid);
+            lruNode = new LruTreeNode(lruTreeFile, nodeid);
             
             sb = new StringBuilder(1);
             sb.append(lruNode.getChar());
@@ -508,7 +508,7 @@ public class WebEntitiesManager {
         Stack<Character> chars = new Stack<>();
         
         // Init
-        lruTreeNode lruNode = new lruTreeNode(lruTreeFile, nodeid);
+        LruTreeNode lruNode = new LruTreeNode(lruTreeFile, nodeid);
         long child;
         long nextSibling;
         long parent;
@@ -596,7 +596,7 @@ public class WebEntitiesManager {
     // The search is only at the same level (looking for next siblings only).
     private long requireCharFromNextSiblings(long nodeid, byte[] charbytes) throws IOException {
         while (true) {
-            lruTreeNode lruNode = new lruTreeNode(lruTreeFile, nodeid);
+            LruTreeNode lruNode = new LruTreeNode(lruTreeFile, nodeid);
             long nextSibling = lruNode.getNextSibling();
             if (compareCharByteArrays(charbytes, lruNode.getCharBytes())) {
                 // We found a matching node, nodeid is the good one.
@@ -616,7 +616,7 @@ public class WebEntitiesManager {
     // Walks starting point to next siblings for specified text
     private long walkNextSiblingsForText(long nodeid, byte[] charbytes) throws IOException {
         while (true) {
-            lruTreeNode lruNode = new lruTreeNode(lruTreeFile, nodeid);
+            LruTreeNode lruNode = new LruTreeNode(lruTreeFile, nodeid);
             long nextSibling = lruNode.getNextSibling();
             if (compareCharByteArrays(charbytes, lruNode.getCharBytes())) {
                 // We found a matching node, nodeid is the good one.
@@ -633,7 +633,7 @@ public class WebEntitiesManager {
     
     // Get child or create it if no child
     private long createChild(long nodeid, byte[] charbytes) throws IOException {
-        lruTreeNode lruNode = new lruTreeNode(lruTreeFile, nodeid);
+        LruTreeNode lruNode = new LruTreeNode(lruTreeFile, nodeid);
         long child = lruNode.getChild();
         if (child > 0) {
             throw new java.lang.RuntimeException(
@@ -655,7 +655,7 @@ public class WebEntitiesManager {
     
     private long chainNewChildOrSibling(long nodeid, byte[] charbytes, boolean isSibling) throws IOException {
         // Register chid/sibling
-        lruTreeNode lruNode = new lruTreeNode(lruTreeFile, nodeid);
+        LruTreeNode lruNode = new LruTreeNode(lruTreeFile, nodeid);
         if (isSibling) {
             lruNode.setNextSibling(nextnodeid);
         } else {
@@ -665,7 +665,7 @@ public class WebEntitiesManager {
         
         // Create new node
         long newnodeid = nextnodeid;
-        lruTreeNode newLruNode = new lruTreeNode(lruTreeFile, newnodeid);
+        LruTreeNode newLruNode = new LruTreeNode(lruTreeFile, newnodeid);
         newLruNode.setCharBytes(charbytes);
         newLruNode.setParent(nodeid);
         newLruNode.setParentIsSibling(isSibling);
@@ -683,7 +683,7 @@ public class WebEntitiesManager {
     // A raw way to monitor the content of the tree
     public void log() throws IOException {
         for(int i=0; i<nextnodeid; i++) {
-            lruTreeNode lruNode = new lruTreeNode(lruTreeFile, i);
+            LruTreeNode lruNode = new LruTreeNode(lruTreeFile, i);
             char c = lruNode.getChar();
             System.out.print(c + "." + i);
             
@@ -693,21 +693,21 @@ public class WebEntitiesManager {
             
             long child = lruNode.getChild();
             if (child > 0) {
-                lruTreeNode childLruNode = new lruTreeNode(lruTreeFile, child);
+                LruTreeNode childLruNode = new LruTreeNode(lruTreeFile, child);
                 char childC = childLruNode.getChar();
                 System.out.print(" -child->" + childC + "." + child);
             }
             
             long nextSibling = lruNode.getNextSibling();
             if (nextSibling > 0) {
-                lruTreeNode nsLruNode = new lruTreeNode(lruTreeFile, nextSibling);
+                LruTreeNode nsLruNode = new LruTreeNode(lruTreeFile, nextSibling);
                 char nextSiblingC = nsLruNode.getChar();
                 System.out.print(" -sibling->" + nextSiblingC + "." + nextSibling);
             }
             
             long parent = lruNode.getParent();
             if (parent > 0) {
-                lruTreeNode parentLruNode = new lruTreeNode(lruTreeFile, parent);
+                LruTreeNode parentLruNode = new LruTreeNode(lruTreeFile, parent);
                 char parentC = parentLruNode.getChar();
                 System.out.print(" <-" + (lruNode.parentIsSibling() ? ("sibling") : ("parent")) + "-" + parentC + "." + parent);
             }
@@ -718,7 +718,7 @@ public class WebEntitiesManager {
             
             long outLinks = lruNode.getOutLinks();
             if (outLinks > 0) {
-                linkTreeNode linkNode = new linkTreeNode(linkTreeFile, outLinks);
+                LinkTreeNode linkNode = new LinkTreeNode(linkTreeFile, outLinks);
                 System.out.println("  ==(" + outLinks + ")=> " + linkNode.getLru());
                 long next = linkNode.getNext();
                 while(next > 0) {
@@ -731,7 +731,7 @@ public class WebEntitiesManager {
             
             long inLinks = lruNode.getInLinks();
             if (inLinks > 0) {
-                linkTreeNode linkNode = new linkTreeNode(linkTreeFile, inLinks);
+                LinkTreeNode linkNode = new LinkTreeNode(linkTreeFile, inLinks);
                 System.out.println("  <=(" + inLinks + ")== " + linkNode.getLru());
                 long next = linkNode.getNext();
                 while(next > 0) {
