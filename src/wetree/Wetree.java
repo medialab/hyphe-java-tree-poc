@@ -28,9 +28,12 @@ public class Wetree {
         WebEntitiesManager wem;
         wem = new WebEntitiesManager(path);
         
-        wem.reset();
-        buildFakeCorpus(wem, 300, 1000000);
+//        wem.reset();
+//        buildFakeCorpus(wem, 300, 1000000);
         
+//        benchmarkRandomWebEntity(wem);
+            benchmarkAllWebEntities(wem, false);
+
 //        foodchainBenchmark(wem);
         
 //        wem.log();
@@ -111,6 +114,54 @@ public class Wetree {
         });
     }
     
+    private static void benchmarkAllWebEntities(WebEntitiesManager wem, boolean display) {
+        ArrayList<WebEntity> wes = (ArrayList<WebEntity>) wem.webentity_getAll();
+        wes.forEach(we->{
+            try {
+                benchmarkWebEntity(wem, we, display);
+            } catch (IOException ex) {
+                Logger.getLogger(Wetree.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        });
+    }
+    
+    private static void benchmarkRandomWebEntity(WebEntitiesManager wem, boolean display) throws IOException {
+        ArrayList<WebEntity> wes = (ArrayList<WebEntity>) wem.webentity_getAll();
+        WebEntity we = wes.get(ThreadLocalRandom.current().nextInt(1, wes.size()));
+        benchmarkWebEntity(wem, we, display);
+    }
+    
+    private static void benchmarkWebEntity(WebEntitiesManager wem, WebEntity we, boolean display) throws IOException {
+        try {
+            if (display) {
+                System.out.print(we.getId() + ". ");
+                we.getPrefixes().forEach(p->{
+                    System.out.print(p + " ");
+                });
+                System.out.println();
+            }
+
+            if (display) System.out.println("   LRUs:");
+            ArrayList<String> lrus = wem.getLrusFromWebEntity(we.getPrefixes());
+            if (display) lrus.forEach(lru->{
+                System.out.println("   - " + lru);
+            });
+
+            if (display) System.out.println("   Links to other web entities:");
+            ArrayList<Integer> weids = wem.getWebEntityOutLinks(we.getPrefixes());
+            if (display) weids.forEach(weid->{
+                System.out.println("   -> " + weid);
+            });
+            
+            if (!display) {
+                System.out.println("Web Entity " + we.getId() + ": retrieved " + lrus.size() + " LRUs and links to " + weids.size() + " web entities");
+            }
+        } catch (IOException ex) {
+            Logger.getLogger(Wetree.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+
     private static void buildFakeCorpus(WebEntitiesManager wem, int webentity_count, int link_count) throws IOException {
         
         // Init
