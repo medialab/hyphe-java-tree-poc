@@ -753,6 +753,12 @@ public class WebEntitiesManager {
         writeWebEntities();
     }
     
+    public void createWebEntity(String prefix) throws IOException {
+        String[] prefixes = new String[1];
+        prefixes[0] = prefix;
+        createWebEntity(prefixes);
+    }
+    
     private void writeWebEntities() throws IOException {
         try (Writer writer = new FileWriter(webentitiesFileName)) {
             Gson gson = new GsonBuilder().setPrettyPrinting().create();
