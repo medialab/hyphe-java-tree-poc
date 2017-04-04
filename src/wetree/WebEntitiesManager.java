@@ -341,7 +341,7 @@ public class WebEntitiesManager {
     }
     
     // Return LRUs of a known web entity
-    public ArrayList<String> getLrusFromWebEntity(List<String> prefixes, int weid) throws IOException {
+    public ArrayList<String> getLrusFromWebEntity(List<String> prefixes) throws IOException {
         ArrayList<String> result = new ArrayList<>();
         prefixes.forEach(lru->{
             long nodeid;
@@ -362,6 +362,57 @@ public class WebEntitiesManager {
             }
         });
         return result;
+    }
+    
+    // Return LRUs of a known web entity
+    public ArrayList<Integer> getWebEntityOutLinks(List<String> prefixes) throws IOException {
+        HashMap<Integer, Integer> weidMap = new HashMap<>();
+        prefixes.forEach(lru->{
+            long nodeid;
+            try {
+                nodeid = followLru(lru);
+                if (nodeid < 0) {
+                    throw new java.lang.RuntimeException(
+                        "Prefix '" + lru + "' could not be found in the tree"
+                    );
+                } else {
+                    ArrayList<Long> nodeids = walkWebEntityForLruNodeIds(nodeid);
+                    nodeids.forEach(nid->{
+                        try {
+                            LruTreeNode lruNode = new LruTreeNode(lruTreeFile, nid);
+                            // TODO: follow the links
+                            long outLinks = lruNode.getOutLinks();
+                            if (outLinks > 0) {
+                                LinkTreeNode linkNode = new LinkTreeNode(linkTreeFile, outLinks);
+                                
+                                int targetweid = windupLruForWebEntityId(linkNode.getLru());
+                                weidMap.put(targetweid, weidMap.getOrDefault(targetweid, 0));
+                                
+                                long next = linkNode.getNext();
+                                while(next > 0) {
+                                    linkNode.read(next);
+                                    
+                                    targetweid = windupLruForWebEntityId(linkNode.getLru());
+                                    weidMap.put(targetweid, weidMap.getOrDefault(targetweid, 0));
+                                
+                                    next = linkNode.getNext();
+                                }
+                            }
+                            
+                            
+                        } catch (IOException ex) {
+                            Logger.getLogger(WebEntitiesManager.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    });
+                }
+            } catch (IOException ex) {
+                Logger.getLogger(WebEntitiesManager.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        });
+        ArrayList<Integer> result = new ArrayList<>();
+        weidMap.keySet().forEach(weid->{ result.add(weid);});
+        return result;
+                
     }
     
     // Add a string to the tree (period)
@@ -499,6 +550,30 @@ public class WebEntitiesManager {
         return lru;
     }
     
+    // Returns the web entity containing of a node id (or -1 if not found)
+    private int windupLruForWebEntityId(long nodeid) throws IOException {
+        LruTreeNode lruNode;
+        int weid;
+        
+        do {
+            lruNode = new LruTreeNode(lruTreeFile, nodeid);
+            weid = lruNode.getWebEntity();
+            
+            if (weid > 0) {
+                return weid;
+            }
+
+            while (lruNode.parentIsSibling()) {
+                lruNode.read(lruNode.getParent());
+            }
+            
+            // Jump to parent
+            nodeid = lruNode.getParent();
+        } while(nodeid > 0);
+        
+        return -1;
+    }
+    
     // Walk the tree from a given node id not following nodes with web entities
     // Note: does not return the full strings but only starting from the nodeid
     //       ie. it returns the suffixes of the webentity prefix
@@ -590,6 +665,80 @@ public class WebEntitiesManager {
                 chars.pop();
             }
             
+        }
+        
+        return result;
+    }
+    
+    // Walk the tree from a given node id not following nodes with web entities
+    private ArrayList<Long> walkWebEntityForLruNodeIds(long nodeid) throws IOException {
+        ArrayList<Long> result = new ArrayList<>();
+        
+        // A custom walk in the tree:
+        // We do not follow the children of any node with a web entity id
+        
+        int depth = 0;
+        
+        // Init
+        LruTreeNode lruNode = new LruTreeNode(lruTreeFile, nodeid);
+        long child;
+        long nextSibling;
+        long parent;
+        boolean parentIsSibling;
+        boolean descending = true;
+        boolean ignore;
+        
+        // The starting LRU may be a word
+        if (lruNode.isEnding()) {
+            result.add(nodeid);
+        }
+        
+        // If there is no child, it stops there
+        child = lruNode.getChild();
+        if (child <= 0) {
+            return result;
+        }
+        
+        // Let's start the walk with the child
+        nodeid = child;
+        lruNode.read(nodeid);
+        depth++;
+        
+        // Walk: recursively inspect nodes depth first
+        while (depth > 0) {
+            
+            // We ignore nodes that have a web entity registered
+            ignore = lruNode.getWebEntity() > 0;
+                
+            // Add the nodeid to the list
+            if (descending && lruNode.isEnding() && !ignore) {
+                result.add(nodeid);
+            }
+            
+            child = lruNode.getChild();
+            nextSibling = lruNode.getNextSibling();
+            if (descending && child > 0 && !ignore) {
+                nodeid = child;
+                lruNode.read(nodeid);
+                depth++;
+            } else if (nextSibling > 0) {
+                descending = true;
+                nodeid = nextSibling;
+                lruNode.read(nodeid);
+            } else {
+                descending = false;
+                parent = lruNode.getParent();
+                parentIsSibling = lruNode.parentIsSibling();
+                while(parentIsSibling) {
+                    nodeid = parent;
+                    lruNode.read(nodeid);
+                    parent = lruNode.getParent();
+                    parentIsSibling = lruNode.parentIsSibling();
+                }
+                nodeid = parent;
+                lruNode.read(nodeid);
+                depth--;
+            }
         }
         
         return result;
@@ -755,6 +904,13 @@ public class WebEntitiesManager {
         we.setPrefixes(Arrays.asList(prefixes));
         webEntities.add(we);
         webentity_write();
+        we.getPrefixes().forEach(lru->{
+            try {
+                addWebEntityPrefix(lru, we.getId());
+            } catch (IOException ex) {
+                Logger.getLogger(WebEntitiesManager.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        });
     }
     
     public void webentity_create(String prefix) throws IOException {

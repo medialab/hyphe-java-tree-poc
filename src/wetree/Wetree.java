@@ -74,17 +74,24 @@ public class Wetree {
         ArrayList<WebEntity> wes = (ArrayList<WebEntity>) wem.webentity_getAll();
         wes.forEach(we->{
             try {
-                System.out.print("- ");
+                System.out.print(we.getId() + ". ");
                 we.getPrefixes().forEach(p->{
                     System.out.print(p + " ");
                 });
                 System.out.println();
                 
-                System.out.println("  LRUs:");
-                ArrayList<String> lrus = wem.getLrusFromWebEntity(we.getPrefixes(), we.getId());
+                System.out.println("   LRUs:");
+                ArrayList<String> lrus = wem.getLrusFromWebEntity(we.getPrefixes());
                 lrus.forEach(lru->{
-                    System.out.println("  - " + lru);
+                    System.out.println("   - " + lru);
                 });
+                
+                System.out.println("   Links to other web entities:");
+                ArrayList<Integer> weids = wem.getWebEntityOutLinks(we.getPrefixes());
+                weids.forEach(weid->{
+                    System.out.println("   -> " + weid);
+                });
+                
             } catch (IOException ex) {
                 Logger.getLogger(Wetree.class.getName()).log(Level.SEVERE, null, ex);
             }
