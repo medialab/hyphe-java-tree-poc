@@ -14,15 +14,15 @@ import java.util.Arrays;
  *
  * @author jacomyma
  */
-public class linkTreeNode {
+public class LinkTreeNode {
     public static final int TREENODE_SIZE = 16;
     public static final int TREENODE_OFFSET_LRU = 0;
     public static final int TREENODE_OFFSET_NEXT = 8;
     private final RandomAccessFile file;
     private long nodeid;
-    private byte[] bytes;
+    private final byte[] bytes;
     
-    public linkTreeNode(RandomAccessFile file, long nodeid) throws IOException {
+    public LinkTreeNode(RandomAccessFile file, long nodeid) throws IOException {
         bytes = new byte[TREENODE_SIZE];
         this.file = file;
         this.nodeid = nodeid;
@@ -54,9 +54,9 @@ public class linkTreeNode {
     }
     
     public void setLru(long lrunodeid) {
-        byte[] bytes = Longs.toByteArray(lrunodeid);
+        byte[] b = Longs.toByteArray(lrunodeid);
         for(int i = 0; i<8; i++) {
-            this.bytes[TREENODE_OFFSET_LRU+i] = bytes[i];
+            this.bytes[TREENODE_OFFSET_LRU+i] = b[i];
         }
     }
     
@@ -65,9 +65,9 @@ public class linkTreeNode {
     }
     
     public void setNext(long linknodeid) {
-        byte[] bytes = Longs.toByteArray(linknodeid);
+        byte[] b = Longs.toByteArray(linknodeid);
         for(int i = 0; i<8; i++) {
-            this.bytes[TREENODE_OFFSET_NEXT+i] = bytes[i];
+            this.bytes[TREENODE_OFFSET_NEXT+i] = b[i];
         }
     }
     
