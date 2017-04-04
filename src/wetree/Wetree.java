@@ -41,12 +41,12 @@ public class Wetree {
         wem.addLru("Shell:Whelk");
         wem.addLru("Crustacean:Lobster");
         
-        wem.createWebEntity("Plankton");
-        wem.createWebEntity("Crustacean");
-        wem.createWebEntity("Fish");
-        wem.createWebEntity("Shell");
-        wem.createWebEntity("Bird");
-        wem.createWebEntity("Plant");
+        wem.webentity_create("Plankton");
+        wem.webentity_create("Crustacean");
+        wem.webentity_create("Fish");
+        wem.webentity_create("Shell");
+        wem.webentity_create("Bird");
+        wem.webentity_create("Plant");
         
         wem.addLink("Plankton:Phytoplankton", "Plankton:Zooplankton");
         wem.addLink("Plankton:Phytoplankton", "Shell:Mussels");
@@ -68,8 +68,18 @@ public class Wetree {
         wem.addLink("Shell:Whelk", "Bird:Gull");
         wem.addLink("Shell:Whelk", "Crustacean:Lobster");
         
+        System.out.println("\nWeb Entities:");
+        ArrayList<WebEntity> wes = (ArrayList<WebEntity>) wem.webentity_getAll();
+        wes.forEach(we->{
+            System.out.print("- ");
+            we.getPrefixes().forEach(p->{
+                System.out.print(p + " ");
+            });
+            System.out.println();
+        });
+        
         ArrayList<String[]> links = wem._geAllLruLinks_SLOW();
-        System.out.println("Links:");
+        System.out.println("\nLRU Links:");
         links.forEach(link->{
             System.out.println(link[0] + " -> " + link[1]);
         });
@@ -137,7 +147,7 @@ public class Wetree {
                 }
             }            
             
-            wem.createWebEntity(prefixes);
+            wem.webentity_create(prefixes);
         }
         
     }

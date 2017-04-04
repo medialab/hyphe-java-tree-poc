@@ -36,11 +36,11 @@ public class WebEntitiesManager {
     private final String rootPath;
     private final RandomAccessFile lruTreeFile;
     private final RandomAccessFile linkTreeFile;
-    private final String webentitiesFileName;
     private long nextnodeid = 1;
     private long nextlinkid = 1;
     
     // Web Entity related stuff (for convenience, but should be done elswhere)
+    private final String webentitiesFileName;
     private List<WebEntity> webEntities = new ArrayList<>();
     private int currentWebEntityId = 1;
     
@@ -67,7 +67,7 @@ public class WebEntitiesManager {
             webEntities = new ArrayList<>();
             currentWebEntityId = 1;
         } else {
-            readWebEntities();
+            webentity_read();
         }
     }
     
@@ -745,28 +745,28 @@ public class WebEntitiesManager {
     }
     
     // Pure web entity helpers that should not really be part of this
-    public void createWebEntity(String[] prefixes) throws IOException {
+    public void webentity_create(String[] prefixes) throws IOException {
         WebEntity we = new WebEntity();
         we.setId(currentWebEntityId++);
         we.setPrefixes(Arrays.asList(prefixes));
         webEntities.add(we);
-        writeWebEntities();
+        webentity_write();
     }
     
-    public void createWebEntity(String prefix) throws IOException {
+    public void webentity_create(String prefix) throws IOException {
         String[] prefixes = new String[1];
         prefixes[0] = prefix;
-        createWebEntity(prefixes);
+        WebEntitiesManager.this.webentity_create(prefixes);
     }
     
-    private void writeWebEntities() throws IOException {
+    private void webentity_write() throws IOException {
         try (Writer writer = new FileWriter(webentitiesFileName)) {
             Gson gson = new GsonBuilder().setPrettyPrinting().create();
             gson.toJson(webEntities, writer);
         }
     }
     
-    private void readWebEntities() throws FileNotFoundException {
+    private void webentity_read() throws FileNotFoundException {
         File f = new File(webentitiesFileName);
         if(f.exists() && !f.isDirectory()) { 
             Gson gson = new GsonBuilder().create();
@@ -778,6 +778,10 @@ public class WebEntitiesManager {
             });
             currentWebEntityId++;
         }
+    }
+    
+    public List<WebEntity> webentity_getAll() {
+        return webEntities;
     }
     
 }
