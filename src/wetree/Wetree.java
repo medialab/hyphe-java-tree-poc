@@ -29,8 +29,15 @@ public class Wetree {
         wem = new WebEntitiesManager(path);
         
         wem.reset();
-//        buildFakeCorpus(wem);
+        buildFakeCorpus(wem, 300, 1000000);
+        
+//        foodchainBenchmark(wem);
+        
+//        wem.log();
 
+    }
+    
+    private static void foodchainBenchmark(WebEntitiesManager wem) throws IOException {
         wem.addLru("Plankton:Phytoplankton");
         wem.addLru("Plankton:Zooplankton");
         wem.addLru("Crustacean:Prawn");
@@ -102,16 +109,12 @@ public class Wetree {
         links.forEach(link->{
             System.out.println(link[0] + " -> " + link[1]);
         });
-//        wem.log();
-
     }
     
-    private static void buildFakeCorpus(WebEntitiesManager wem) throws IOException {
-        // Build a fake corpus
-        // Settings
-        int webentity_count = 1;
+    private static void buildFakeCorpus(WebEntitiesManager wem, int webentity_count, int link_count) throws IOException {
         
         // Init
+        ArrayList<String> lrus = new ArrayList<>();
         ArrayList<String> stems = new ArrayList<>();
         stems.add("poney");
         stems.add("vache");
@@ -143,9 +146,10 @@ public class Wetree {
         stems.add("gougeon");
         stems.add("grenouille");
         
+        System.out.print("Creating " + webentity_count + " web entities with pages...");
         while (webentity_count-- > 0) {
             
-            String[] prefixes = new String[ThreadLocalRandom.current().nextInt(1, 8)];
+            String[] prefixes = new String[ThreadLocalRandom.current().nextInt(1, 8+1)];
             for (int i=0; i<prefixes.length; i++) {
                 String p = "";
                 int prefix_size = ThreadLocalRandom.current().nextInt(2, 5+1);
@@ -155,20 +159,31 @@ public class Wetree {
                 prefixes[i] = p;
                 
                 // Pages
-                int pages_count = 3;//ThreadLocalRandom.current().nextInt(1, 10+1) * ThreadLocalRandom.current().nextInt(1, 10+1) * ThreadLocalRandom.current().nextInt(1, 10+1) * ThreadLocalRandom.current().nextInt(1, 10+1);
+                int pages_count = (int) Math.floor(Math.pow(2, ThreadLocalRandom.current().nextInt(0, 10+1)));
                 while (pages_count-- > 0) {
                     String lru = p;
                     int suffix_size = ThreadLocalRandom.current().nextInt(1, 6+1);
                     while (suffix_size-- > 0) {
                         lru += stems.get(ThreadLocalRandom.current().nextInt(0, stems.size())) + "|";
                     }
+                    lrus.add(lru);
                     wem.addLru(lru);
                 }
             }            
             
             wem.webentity_create(prefixes);
         }
+        System.out.println(" done.");
+        System.out.println(lrus.size() + " LRUs were created in that process.");
         
+        // Create random links
+        System.out.print("Creating " + link_count + " random LRU links...");
+        while (link_count-- > 0) {
+            String sourcelru = lrus.get(ThreadLocalRandom.current().nextInt(1, lrus.size()));
+            String targetlru = lrus.get(ThreadLocalRandom.current().nextInt(1, lrus.size()));
+            wem.addLink(sourcelru, targetlru);
+        }
+        System.out.println(" done.");
     }
     
 }
