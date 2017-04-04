@@ -28,11 +28,11 @@ public class Wetree {
         WebEntitiesManager wem;
         wem = new WebEntitiesManager(path);
         
-//        wem.reset();
-//        buildFakeCorpus(wem, 300, 1000000);
+        wem.reset();
+        buildFakeCorpus(wem, 1500, 5000000);
         
 //        benchmarkRandomWebEntity(wem);
-            benchmarkAllWebEntities(wem, false);
+//        benchmarkAllWebEntities(wem, false);
 
 //        foodchainBenchmark(wem);
         

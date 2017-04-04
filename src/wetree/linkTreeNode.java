@@ -78,5 +78,5 @@ public class LinkTreeNode {
     public long getId() {
         return nodeid;
     }
-    
+    // TEST
 }
