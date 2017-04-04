@@ -473,23 +473,24 @@ public class WebEntitiesManager {
     
     // Returns the lru of a node id
     private String windupLru(long nodeid) throws IOException {
-        lruTreeNode lruNode = new lruTreeNode(lruTreeFile, nodeid);
+        lruTreeNode lruNode;
+        StringBuilder sb;
+        String lru = "";
         
-        StringBuilder sb = new StringBuilder(1);
-        sb.append(lruNode.getChar());
-        String lru = sb.toString();
-        
-        while (lruNode.getParent() > 0) {
-            if (lruNode.parentIsSibling()) {
-                lruNode.read(lruNode.getParent());
-            } else {
-                sb = new StringBuilder(1);
-                sb.append(lruNode.getChar());
-                lru = sb.toString() + lru;
-                
+        do {
+            lruNode = new lruTreeNode(lruTreeFile, nodeid);
+            
+            sb = new StringBuilder(1);
+            sb.append(lruNode.getChar());
+            lru = sb.toString() + lru;
+
+            while (lruNode.parentIsSibling()) {
                 lruNode.read(lruNode.getParent());
             }
-        }
+            
+            // Jump to parent
+            nodeid = lruNode.getParent();
+        } while(nodeid > 0);
         
         return lru;
     }

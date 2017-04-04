@@ -28,15 +28,38 @@ public class Wetree {
         
         wem.reset();
 //        buildFakeCorpus(wem);
+
+        wem.addLru("Phytoplankton");
+        wem.addLru("Zooplankton");
+        wem.addLru("Prawn");
+        wem.addLru("Fish");
+        wem.addLru("Mussels");
+        wem.addLru("Crab");
+        wem.addLru("Gull");
+        wem.addLru("Seaweed");
+        wem.addLru("Limpets");
+        wem.addLru("Whelk");
+        wem.addLru("Lobster");
         
-        wem.addLru("AA");
-        wem.addLru("B");
-        wem.addLru("C");
-        
-        wem.addLink("AA", "B");
-        wem.addLink("B", "AA");
-        wem.addLink("AA", "C");
-        wem.addLink("B", "C");
+        wem.addLink("Phytoplankton", "Zooplankton");
+        wem.addLink("Phytoplankton", "Mussels");
+        wem.addLink("Zooplankton", "Prawn");
+        wem.addLink("Zooplankton", "Mussels");
+        wem.addLink("Prawn", "Fish");
+        wem.addLink("Prawn", "Gull");
+        wem.addLink("Mussels", "Gull");
+        wem.addLink("Mussels", "Crab");
+        wem.addLink("Mussels", "Lobster");
+        wem.addLink("Mussels", "Whelk");
+        wem.addLink("Crab", "Gull");
+        wem.addLink("Crab", "Lobster");
+        wem.addLink("Seaweed", "Limpets");
+        wem.addLink("Limpets", "Crab");
+        wem.addLink("Limpets", "Gull");
+        wem.addLink("Limpets", "Whelk");
+        wem.addLink("Limpets", "Lobster");
+        wem.addLink("Whelk", "Gull");
+        wem.addLink("Whelk", "Lobster");
         
         ArrayList<String[]> links = wem._geAllLruLinks_SLOW();
         System.out.println("Links:");
