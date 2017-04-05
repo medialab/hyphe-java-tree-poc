@@ -9,6 +9,7 @@ import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoCursor;
 
 import org.bson.Document;
 
@@ -26,5 +27,13 @@ public class MongoConnector {
         this.client = new MongoClient(connectionURI);
         this.database = this.client.getDatabase("hyphe");
         this.collection = this.database.getCollection("AXA.pages");
+    }
+    
+    public MongoCursor<Document> getPagesCursor() {
+        return this.collection.find().iterator();
+    }
+    
+    public MongoPageLrusIterator<String> getPagesLrusIterator() {
+        return new MongoPageLrusIterator(this.getPagesCursor());
     }
 }
