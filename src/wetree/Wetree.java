@@ -29,9 +29,9 @@ public class Wetree {
         wem = new WebEntitiesManager(path);
         
         wem.reset();
-//        buildFakeCorpus(wem, 2, 100);
+        buildFakeCorpus(wem, 5, 100);
         
-//        benchmarkRandomWebEntity(wem);
+        benchmarkRandomWebEntity(wem, true);
 //        benchmarkAllWebEntities(wem, false);
 
 //        foodchainBenchmark(wem);
@@ -41,17 +41,17 @@ public class Wetree {
     }
     
     private static void foodchainBenchmark(WebEntitiesManager wem) throws IOException {
-        wem.addLru("Plankton:Phytoplankton");
-        wem.addLru("Plankton:Zooplankton");
-        wem.addLru("Crustacean:Prawn");
-        wem.addLru("Fish:Fish");
-        wem.addLru("Shell:Mussels");
-        wem.addLru("Crustacean:Crab");
-        wem.addLru("Bird:Gull");
-        wem.addLru("Plant:Seaweed");
-        wem.addLru("Shell:Limpets");
-        wem.addLru("Shell:Whelk");
-        wem.addLru("Crustacean:Lobster");
+        wem.addPage("Plankton:Phytoplankton");
+        wem.addPage("Plankton:Zooplankton");
+        wem.addPage("Crustacean:Prawn");
+        wem.addPage("Fish:Fish");
+        wem.addPage("Shell:Mussels");
+        wem.addPage("Crustacean:Crab");
+        wem.addPage("Bird:Gull");
+        wem.addPage("Plant:Seaweed");
+        wem.addPage("Shell:Limpets");
+        wem.addPage("Shell:Whelk");
+        wem.addPage("Crustacean:Lobster");
         
         wem.webentity_create("Plankton");
         wem.webentity_create("Crustacean");
@@ -218,7 +218,7 @@ public class Wetree {
                         lru += stems.get(ThreadLocalRandom.current().nextInt(0, stems.size())) + "|";
                     }
                     lrus.add(lru);
-                    wem.addLru(lru);
+                    wem.addPage(lru);
                 }
             }            
             

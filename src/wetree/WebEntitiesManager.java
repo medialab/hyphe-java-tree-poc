@@ -32,7 +32,7 @@ import java.util.logging.Logger;
  *
  * @author jacomyma
  */
-public class WebEntitiesManager {
+public class WebEntitiesManager implements WebEntityPageIndex {
     private final String rootPath;
     private final RandomAccessFile lruTreeFile;
     private final RandomAccessFile linkTreeFile;
@@ -71,24 +71,31 @@ public class WebEntitiesManager {
         }
     }
     
-    public void reset() throws IOException {
-        lruTreeFile.setLength(0);
-        linkTreeFile.setLength(0);
-        init();
+    @Override
+    public void reset() {
+        try {
+            lruTreeFile.setLength(0);
+            linkTreeFile.setLength(0);
+            init();
+        } catch (IOException ex) {
+            Logger.getLogger(WebEntitiesManager.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
     
-    public long addLru(String lru) throws IOException {
-        // Add the lru to the lruTree
-        long nodeid = add(lru);
-
-        // The last child has to get the ending marker.
-        // It means "this branch is a string to retrieve"
-        // as opposed to just traversing it as a part of a longer string
-        LruTreeNode lruNode = new LruTreeNode(lruTreeFile, nodeid);
-        lruNode.setEnding(true);
-        lruNode.write();
-        
-        return nodeid;
+    public void addPage(String page) {
+        try {
+            // Add the lru to the lruTree
+            long nodeid = add(page);
+            
+            // The last child has to get the ending marker.
+            // It means "this branch is a string to retrieve"
+            // as opposed to just traversing it as a part of a longer string
+            LruTreeNode lruNode = new LruTreeNode(lruTreeFile, nodeid);
+            lruNode.setEnding(true);
+            lruNode.write();
+        } catch (IOException ex) {
+            Logger.getLogger(WebEntitiesManager.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
      
     public long addWebEntityPrefix(String lru, int weid) throws IOException {
