@@ -88,7 +88,7 @@ public class Wetree {
                 System.out.println();
                 
                 System.out.println("   LRUs:");
-                ArrayList<String> lrus = wept.getPages(we.getPrefixes());
+                ArrayList<String> lrus = wept.getPages(we.getId());
                 lrus.forEach(lru->{
                     System.out.println("   - " + lru);
                 });
@@ -139,7 +139,7 @@ public class Wetree {
             }
 
             if (display) System.out.println("   LRUs:");
-            ArrayList<String> lrus = wept.getPages(we.getPrefixes());
+            ArrayList<String> lrus = wept.getPages(we.getId());
             if (display) lrus.forEach(lru->{
                 System.out.println("   - " + lru);
             });

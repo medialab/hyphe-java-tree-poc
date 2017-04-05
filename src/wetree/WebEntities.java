@@ -18,6 +18,7 @@ import java.io.Writer;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -28,8 +29,9 @@ import java.util.logging.Logger;
  */
 public class WebEntities {
     private static final WebEntities INSTANCE = new WebEntities();
-    private final String webentitiesFileName = System.getProperty("user.dir") + File.separator + "data" + File.separator + File.separator + "data" + "webentities.json";
+    private final String webentitiesFileName = System.getProperty("user.dir") + File.separator + "data" + File.separator + "webentities.json";
     private List<WebEntity> webEntities = new ArrayList<>();
+    private HashMap<Integer, WebEntity> webEntitiesIndex = new HashMap<>();
     private int currentWebEntityId = 1;
     
     // Singleton
@@ -50,6 +52,7 @@ public class WebEntities {
         we.setId(currentWebEntityId++);
         we.setPrefixes(Arrays.asList(prefixes));
         webEntities.add(we);
+        webEntitiesIndex.put(we.getId(), we);
         write();
         we.getPrefixes().forEach(lru->{
             WebEntityPageTree.getInstance().associatePrefixWithWebentity(lru, we.getId());
@@ -59,7 +62,7 @@ public class WebEntities {
     public void create(String prefix) throws IOException {
         String[] prefixes = new String[1];
         prefixes[0] = prefix;
-        WebEntities.this.create(prefixes);
+        create(prefixes);
     }
     
     private void write() throws IOException {
@@ -78,6 +81,7 @@ public class WebEntities {
             webEntities = gson.fromJson(br, type);
             webEntities.forEach(we->{
                 currentWebEntityId = Math.max(currentWebEntityId, we.getId());
+                webEntitiesIndex.put(we.getId(), we);
             });
             currentWebEntityId++;
         }
@@ -85,5 +89,9 @@ public class WebEntities {
     
     public List<WebEntity> getAll() {
         return webEntities;
+    }
+    
+    public WebEntity get(int weid) {
+        return webEntitiesIndex.get(weid);
     }
 }

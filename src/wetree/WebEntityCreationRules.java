@@ -28,7 +28,7 @@ import java.util.logging.Logger;
  */
 public class WebEntityCreationRules {
     private static final WebEntityCreationRules INSTANCE = new WebEntityCreationRules();
-    private final String wecrFileName = System.getProperty("user.dir") + File.separator + "data" + File.separator + File.separator + "data" + "webentities.json";
+    private final String wecrFileName = System.getProperty("user.dir") + File.separator + "data" + File.separator + "webentitycreationrules.json";
     private List<WebEntityCreationRule> rules = new ArrayList<>();
     private int currentWebEntityId = 1;
     

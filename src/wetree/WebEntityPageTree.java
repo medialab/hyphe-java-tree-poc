@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import static java.util.Objects.isNull;
 import java.util.Stack;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -345,8 +346,19 @@ public class WebEntityPageTree implements WebEntityPageIndex {
         return result;
     }
     
+    @Override
+    public ArrayList<String> getPages(int weid) {
+        WebEntity we = WebEntities.getInstance().get(weid);
+        if (isNull(we)) {
+            throw new java.lang.RuntimeException(
+                "getPages: Web Entity '" + weid + "' could not be found"
+            );
+        }
+        return getPages(we.getPrefixes());
+    }
+    
     // Return LRUs of a known web entity
-    public ArrayList<String> getPages(List<String> prefixes) {
+    private ArrayList<String> getPages(List<String> prefixes) {
         ArrayList<String> result = new ArrayList<>();
         prefixes.forEach(lru->{
             long nodeid;

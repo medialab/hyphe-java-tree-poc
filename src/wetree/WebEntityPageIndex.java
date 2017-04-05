@@ -17,7 +17,7 @@ public interface WebEntityPageIndex {
     public void associatePrefixWithWebentity(String lru, int weid);
 //    public void dissociatePrefix(String lru);
 //    public List<String> getPages(String prefix);
-//    public List<String> getPages(int weid);
+    public List<String> getPages(int weid);
 //    public List<String> getPages(String prefix, QueryParameters params);
 //    public List<String> getPages(int weid, QueryParameters params);
 //    public String getPrefix(String lru);
