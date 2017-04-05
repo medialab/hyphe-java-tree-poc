@@ -2,7 +2,7 @@
 dist/
 build/
 data/*
-nbproject/
+nbproject/private/
 
 #general swap/backup files
 *.so
