@@ -129,6 +129,14 @@ public class WebEntityPageTree implements WebEntityPageIndex {
     }
     
     @Override
+    public List<PLink> getPlinks(String page) {
+        ArrayList<PLink> result = new ArrayList<>();
+        result.addAll(getPlinksInbound(page));
+        result.addAll(getPlinksOutbound(page));
+        return result;
+    }
+        
+    @Override
     public List<PLink> getPlinksInbound(String page) {
         ArrayList<PLink> result = new ArrayList<>();
         ArrayList<Long> sourceNodeIds = new ArrayList<>();
