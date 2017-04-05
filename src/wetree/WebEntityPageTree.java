@@ -129,13 +129,45 @@ public class WebEntityPageTree implements WebEntityPageIndex {
     }
     
     @Override
+    public List<PLink> getPlinksInbound(String page) {
+        ArrayList<PLink> result = new ArrayList<>();
+        ArrayList<Long> sourceNodeIds = new ArrayList<>();
+        try {
+            long nodeid = followLru(page).nodeid;
+            LruTreeNode lruNode = new LruTreeNode(lruTreeFile, nodeid);
+            // Follow the links
+            LinkTreeNode linkNode = new LinkTreeNode(linkTreeFile, lruNode.getInLinks());
+            sourceNodeIds.add(linkNode.getLru());
+            long next = linkNode.getNext();
+            while(next > 0) {
+                linkNode.read(next);
+                sourceNodeIds.add(linkNode.getLru());
+                next = linkNode.getNext();
+            }
+            sourceNodeIds.forEach(tnodeid->{   
+                try {
+                    String sourceLru = windupLru(tnodeid);
+                    PLink pLink = new PLink(sourceLru, page);
+                    result.add(pLink);
+                } catch (IOException ex) {
+                    Logger.getLogger(WebEntityPageTree.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            });
+        } catch (IOException ex) {
+            Logger.getLogger(WebEntityPageTree.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return result;
+    }
+    
+    @Override
     public List<PLink> getPlinksOutbound(String page) {
         ArrayList<PLink> result = new ArrayList<>();
         ArrayList<Long> targetNodeIds = new ArrayList<>();
         try {
             long nodeid = followLru(page).nodeid;
+            LruTreeNode lruNode = new LruTreeNode(lruTreeFile, nodeid);
             // Follow the links
-            LinkTreeNode linkNode = new LinkTreeNode(linkTreeFile, nodeid);
+            LinkTreeNode linkNode = new LinkTreeNode(linkTreeFile, lruNode.getOutLinks());
             targetNodeIds.add(linkNode.getLru());
             long next = linkNode.getNext();
             while(next > 0) {
