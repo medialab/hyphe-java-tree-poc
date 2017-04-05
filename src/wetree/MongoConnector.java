@@ -32,8 +32,4 @@ public class MongoConnector {
     public MongoCursor<Document> getPagesCursor() {
         return this.collection.find().iterator();
     }
-    
-    public MongoPageLrusIterator<String> getPagesLrusIterator() {
-        return new MongoPageLrusIterator(this.getPagesCursor());
-    }
 }
