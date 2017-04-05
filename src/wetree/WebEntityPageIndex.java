@@ -23,7 +23,7 @@ public interface WebEntityPageIndex {
     public String getPrefix(String lru);
     public int getWebentity(String lru);
     public int getWebentity_fromPrefix(String prefix);
-//    public void addPlink(PLink pLink);
+    public void addPlink(String sourcePage, String targetPage);
 //    public List<PLink> getPlinks(String page);
 //    public List<PLink> getPlinksInbound(String page);
 //    public List<PLink> getPlinksOutbound(String page);

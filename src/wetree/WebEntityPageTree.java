@@ -73,7 +73,7 @@ public class WebEntityPageTree implements WebEntityPageIndex {
     public void addPage(String page) {
         try {
             // Add the lru to the lruTree
-            long nodeid = add(page);
+            long nodeid = add(page).nodeid;
             
             // The last child has to get the ending marker.
             // It means "this branch is a string to retrieve"
@@ -90,7 +90,7 @@ public class WebEntityPageTree implements WebEntityPageIndex {
     public void associatePrefixWithWebentity(String lru, int weid) {
         try {
             // Add the lru to the lruTree
-            long nodeid = add(lru);
+            long nodeid = add(lru).nodeid;
             
             // The last child has to get the ending marker
             LruTreeNode lruNode = new LruTreeNode(lruTreeFile, nodeid);
@@ -101,21 +101,26 @@ public class WebEntityPageTree implements WebEntityPageIndex {
         }
     }
     
-    public void addLink(String sourcelru, String targetlru) throws IOException {
-        long sourcenodeid = followLru(sourcelru).nodeid;
-        long targetnodeid = followLru(targetlru).nodeid;
-        if (sourcenodeid < 0) {
-            throw new java.lang.RuntimeException(
-                "Link add issue: " + sourcelru + " could not be found in the tree"
-            );
+    @Override
+    public void addPlink(String sourcePage, String targetPage) {
+        try {
+            long sourcenodeid = add(sourcePage).nodeid;
+            long targetnodeid = add(targetPage).nodeid;
+            if (sourcenodeid < 0) {
+                throw new java.lang.RuntimeException(
+                        "Link add issue: " + sourcePage + " could not be found in the tree"
+                );
+            }
+            if (targetnodeid < 0) {
+                throw new java.lang.RuntimeException(
+                        "Link add issue: " + sourcePage + " could not be found in the tree"
+                );
+            }
+            addLinkStub(sourcenodeid, targetnodeid, true);
+            addLinkStub(targetnodeid, sourcenodeid, false);
+        } catch (IOException ex) {
+            Logger.getLogger(WebEntityPageTree.class.getName()).log(Level.SEVERE, null, ex);
         }
-        if (targetnodeid < 0) {
-            throw new java.lang.RuntimeException(
-                "Link add issue: " + sourcelru + " could not be found in the tree"
-            );
-        }
-        addLinkStub(sourcenodeid, targetnodeid, true);
-        addLinkStub(targetnodeid, sourcenodeid, false);
     }
     
     // Return all LRUs - walks all the tree, SLOW, mostly for monitoring
@@ -447,9 +452,10 @@ public class WebEntityPageTree implements WebEntityPageIndex {
     }
     
     // Add a string to the tree (period)
-    private long add(String lru) throws IOException {
+    private WalkHistory add(String lru) throws IOException {
         char[] chars = lru.toCharArray();
-        long nodeid = 0;
+        WalkHistory wh = new WalkHistory();
+        wh.nodeid = 0;
         int i = 0;
         while (i < chars.length) {
             char c = chars[i];
@@ -457,16 +463,16 @@ public class WebEntityPageTree implements WebEntityPageIndex {
             
             // First we require the char on current level
             // (require = get if exists, create if not)
-            nodeid = requireCharFromNextSiblings(nodeid, charbytes);
+            wh.nodeid = requireCharFromNextSiblings(wh.nodeid, charbytes);
             
             i++;
             
             // Is there a child?
-            LruTreeNode lruNode = new LruTreeNode(lruTreeFile, nodeid);
+            LruTreeNode lruNode = new LruTreeNode(lruTreeFile, wh.nodeid);
             long child = lruNode.getChild();
             if (child > 0 && i < chars.length) {
                 // There's a child: search him and its siblings
-                nodeid = child;
+                wh.nodeid = child;
             } else {
                 // There is no child: we jump to the next loop
                 // where we store the rest of the letters in new children
@@ -481,12 +487,12 @@ public class WebEntityPageTree implements WebEntityPageIndex {
             
             // We're here if the last letter had no child
             // Let's create children until the string is stored
-            nodeid = createChild(nodeid, charbytes);
+            wh.nodeid = createChild(wh.nodeid, charbytes);
             
             i++;
         }
         
-        return nodeid;
+        return wh;
     }
     
     // Add a link stub
