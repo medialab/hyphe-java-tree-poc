@@ -21,7 +21,7 @@ public interface WebEntityPageIndex {
 //    public List<String> getPages(String prefix, QueryParameters params);
 //    public List<String> getPages(int weid, QueryParameters params);
     public String getPrefix(String lru);
-//    public int getWebentity(String lru);
+    public int getWebentity(String lru);
 //    public int getWebentity_fromPrefix(String prefix);
 //    public void addPlink(PLink pLink);
 //    public List<PLink> getPlinks(String page);
