@@ -7,6 +7,7 @@ package wetree;
 
 import com.google.common.primitives.Chars;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
@@ -24,28 +25,39 @@ import java.util.logging.Logger;
  * @author jacomyma
  */
 public class WebEntityPageTree implements WebEntityPageIndex {
-    private final String rootPath System.getProperty("user.dir") + File.separator + "data" + File.separator;
-    private final RandomAccessFile lruTreeFile;
-    private final RandomAccessFile linkTreeFile;
+    private static final WebEntityPageTree INSTANCE = new WebEntityPageTree();
+    private final String rootPath = System.getProperty("user.dir") + File.separator + "data" + File.separator;
+    private RandomAccessFile lruTreeFile;
+    private RandomAccessFile linkTreeFile;
     private long nextnodeid = 1;
     private long nextlinkid = 1;
         
-    public WebEntityPageTree(String p) throws IOException{
-        rootPath = p;
- 
+    private WebEntityPageTree() {
+        try {
+            // Init
+            init();
+        } catch (FileNotFoundException ex) {
+            Logger.getLogger(WebEntityPageTree.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
+    public static WebEntityPageTree getInstance() { return INSTANCE; }
+    
+    private void init() throws FileNotFoundException {
         // Create files
         lruTreeFile = new RandomAccessFile(rootPath + "lrus.dat", "rw");
         linkTreeFile = new RandomAccessFile(rootPath + "links.dat", "rw");
 
-        init();
-    }
-    
-    private void init() throws IOException {        
-        // Keep init only if file empty
-        if (lruTreeFile.length() == 0) {
-            reset();
-        } else {
-            WebEntities.getInstance().read();
+        // If the files are empty, reset (which will respawn the stuff)
+        // If files exist, then just read them.
+        try {
+            if (lruTreeFile.length() == 0) {
+                reset();
+            } else {
+                WebEntities.getInstance().read();
+            }
+        } catch (IOException ex) {
+            Logger.getLogger(WebEntityPageTree.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
     

@@ -5,7 +5,6 @@
  */
 package wetree;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.concurrent.ThreadLocalRandom;
@@ -24,7 +23,7 @@ public class Wetree {
      */
     public static void main(String[] args) throws IOException {
         WebEntityPageTree wept;
-        wept = new WebEntityPageTree(path);
+        wept = WebEntityPageTree.getInstance();
         
         wept.reset();
         buildFakeCorpus(wept, 5, 100);

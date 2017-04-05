@@ -19,6 +19,8 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -36,7 +38,11 @@ public class WebEntities {
     
     public void init() {
         webEntities = new ArrayList<>();
-        read();
+        try {
+            read();
+        } catch (FileNotFoundException ex) {
+            Logger.getLogger(WebEntities.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     public void webentity_create(String[] prefixes) throws IOException {
@@ -46,14 +52,14 @@ public class WebEntities {
         webEntities.add(we);
         webentity_write();
         we.getPrefixes().forEach(lru->{
-            associatePrefixWithWebentity(lru, we.getTreeId());
+            WebEntityPageTree.getInstance().associatePrefixWithWebentity(lru, we.getTreeId());
         });
     }
     
     public void webentity_create(String prefix) throws IOException {
         String[] prefixes = new String[1];
         prefixes[0] = prefix;
-        WebEntityPageTree.this.webentity_create(prefixes);
+        webentity_create(prefixes);
     }
     
     private void webentity_write() throws IOException {
