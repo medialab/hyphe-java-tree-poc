@@ -110,8 +110,8 @@ public class WebEntityPageTree implements WebEntityPageIndex {
     }
     
     public void addLink(String sourcelru, String targetlru) throws IOException {
-        long sourcenodeid = followLru(sourcelru);
-        long targetnodeid = followLru(targetlru);
+        long sourcenodeid = followLru(sourcelru).nodeid;
+        long targetnodeid = followLru(targetlru).nodeid;
         if (sourcenodeid < 0) {
             throw new java.lang.RuntimeException(
                 "Link add issue: " + sourcelru + " could not be found in the tree"
@@ -349,15 +349,15 @@ public class WebEntityPageTree implements WebEntityPageIndex {
     @Override
     public ArrayList<String> getPages(String prefix) {
         ArrayList<String> result = new ArrayList<>();
-        long nodeid;
+        WalkHistory wh;
         try {
-            nodeid = followLru(prefix);
-            if (nodeid < 0) {
+            wh = followLru(prefix);
+            if (!wh.success) {
                 throw new java.lang.RuntimeException(
                     "getPages: Prefix '" + prefix + "' could not be found in the tree"
                 );
             } else {
-                ArrayList<String> suffixes = walkWebEntityForLrus(nodeid);
+                ArrayList<String> suffixes = walkWebEntityForLrus(wh.nodeid);
                 suffixes.forEach(suffix->{
                     result.add(prefix + suffix);
                 });
@@ -383,15 +383,15 @@ public class WebEntityPageTree implements WebEntityPageIndex {
     private ArrayList<String> getPages(List<String> prefixes) {
         ArrayList<String> result = new ArrayList<>();
         prefixes.forEach(lru->{
-            long nodeid;
+            WalkHistory wh;
             try {
-                nodeid = followLru(lru);
-                if (nodeid < 0) {
+                wh = followLru(lru);
+                if (!wh.success) {
                     throw new java.lang.RuntimeException(
                         "getPages: Prefix '" + lru + "' could not be found in the tree"
                     );
                 } else {
-                    ArrayList<String> suffixes = walkWebEntityForLrus(nodeid);
+                    ArrayList<String> suffixes = walkWebEntityForLrus(wh.nodeid);
                     suffixes.forEach(suffix->{
                         result.add(lru + suffix);
                     });
@@ -407,15 +407,15 @@ public class WebEntityPageTree implements WebEntityPageIndex {
     public ArrayList<Integer> getWebEntityOutLinks(List<String> prefixes) throws IOException {
         HashMap<Integer, Integer> weidMap = new HashMap<>();
         prefixes.forEach(lru->{
-            long nodeid;
+            WalkHistory wh;
             try {
-                nodeid = followLru(lru);
-                if (nodeid < 0) {
+                wh = followLru(lru);
+                if (!wh.success) {
                     throw new java.lang.RuntimeException(
                         "Prefix '" + lru + "' could not be found in the tree"
                     );
                 } else {
-                    ArrayList<Long> nodeids = walkWebEntityForLruNodeIds(nodeid);
+                    ArrayList<Long> nodeids = walkWebEntityForLruNodeIds(wh.nodeid);
                     nodeids.forEach(nid->{
                         try {
                             LruTreeNode lruNode = new LruTreeNode(lruTreeFile, nid);
@@ -533,10 +533,15 @@ public class WebEntityPageTree implements WebEntityPageIndex {
     }
     
     // Returns the node id of the lru if it exists, -1 else
-    private long followLru(String lru) throws IOException {
+    private WalkHistory followLru(String lru) throws IOException {
+        WalkHistory wh = new WalkHistory();
         char[] chars = lru.toCharArray();
-        if (chars.length == 0) return -1;
-        long nodeid = 0;
+        if (chars.length == 0) {
+            wh.success = false;
+            wh.nodeid = -1;
+            return wh;
+        }
+        wh.nodeid = 0;
         int i = 0;
         
         while (i < chars.length) {
@@ -544,25 +549,37 @@ public class WebEntityPageTree implements WebEntityPageIndex {
             byte[] charbytes = Chars.toByteArray(c);
             
             // Search for i-th char from nodeid and its next siblings
-            nodeid = walkNextSiblingsForText(nodeid, charbytes);
-            if (nodeid < 0) return -1; // Return unfound if so
+            walkNextSiblingsForText(wh, charbytes);
+            if (wh.nodeid < 0) {
+                wh.success = false;
+                return wh;
+            }
+            
+            // Update history
+            LruTreeNode lruNode = new LruTreeNode(lruTreeFile, wh.nodeid);
+            int weid = lruNode.getWebEntity();
+            if (weid > 0) {
+                wh.lastWebEntityId = weid;
+            }
             
             // The char has been found.
             // If we need to go deeper, then we must ensure there is a child.
             i++;
             if (i < chars.length) {
                 // Is there a child?
-                LruTreeNode lruNode = new LruTreeNode(lruTreeFile, nodeid);
                 long child = lruNode.getChild();
                 if (child > 0) {
-                    nodeid = child;
+                    wh.nodeid = child;
                 } else {
                     // There is no child while there should be
-                    return -1;
+                    wh.success = false;
+                    wh.nodeid = -1;
+                    return wh;
                 }
             }
         }
-        return nodeid;
+        wh.success = true;
+        return wh;
     }
     
     // Returns the lru of a node id
@@ -806,19 +823,20 @@ public class WebEntityPageTree implements WebEntityPageIndex {
     }
     
     // Walks starting point to next siblings for specified text
-    private long walkNextSiblingsForText(long nodeid, byte[] charbytes) throws IOException {
+    private void walkNextSiblingsForText(WalkHistory wh, byte[] charbytes) throws IOException {
         while (true) {
-            LruTreeNode lruNode = new LruTreeNode(lruTreeFile, nodeid);
+            LruTreeNode lruNode = new LruTreeNode(lruTreeFile, wh.nodeid);
             long nextSibling = lruNode.getNextSibling();
             if (compareCharByteArrays(charbytes, lruNode.getCharBytes())) {
                 // We found a matching node, nodeid is the good one.
-                return nodeid;
+                return;
             } else if (nextSibling > 0) {
                 // Not matching, but there are siblings so we keep walking
-                nodeid = nextSibling;
+                wh.nodeid = nextSibling;
             } else {
                 // We're at the end of the level (no more siblings).
-                return -1;
+                wh.nodeid = -1;
+                return;
             }
         }
     }
@@ -934,5 +952,12 @@ public class WebEntityPageTree implements WebEntityPageIndex {
             }
 
         }
+    }
+    
+    private static class WalkHistory {
+        public int lastWebEntityId = 0;
+        public long nodeid = -1;
+        public boolean success = false;
+        public WalkHistory() {}
     }
 }
