@@ -15,11 +15,11 @@ public class WebEntity {
     private Integer id;
     private List<String> prefixes;
 
-    public Integer getId() {
+    public Integer getTreeId() {
         return id;
     }
 
-    public void setId(Integer id) {
+    public void setTreeId(Integer id) {
         this.id = id;
     }
 

@@ -900,13 +900,13 @@ public class WebEntitiesManager {
     // Pure web entity helpers that should not really be part of this
     public void webentity_create(String[] prefixes) throws IOException {
         WebEntity we = new WebEntity();
-        we.setId(currentWebEntityId++);
+        we.setTreeId(currentWebEntityId++);
         we.setPrefixes(Arrays.asList(prefixes));
         webEntities.add(we);
         webentity_write();
         we.getPrefixes().forEach(lru->{
             try {
-                addWebEntityPrefix(lru, we.getId());
+                addWebEntityPrefix(lru, we.getTreeId());
             } catch (IOException ex) {
                 Logger.getLogger(WebEntitiesManager.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -934,7 +934,7 @@ public class WebEntitiesManager {
             Type type = new TypeToken<List<WebEntity>>(){}.getType();
             webEntities = gson.fromJson(br, type);
             webEntities.forEach(we->{
-                currentWebEntityId = Math.max(currentWebEntityId, we.getId());
+                currentWebEntityId = Math.max(currentWebEntityId, we.getTreeId());
             });
             currentWebEntityId++;
         }
