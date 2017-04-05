@@ -30,21 +30,17 @@ import java.util.logging.Logger;
 public class WebEntities {
     private static final WebEntities INSTANCE = new WebEntities();
     private final String webentitiesFileName = System.getProperty("user.dir") + File.separator + "data" + File.separator + "webentities.json";
-    private List<WebEntity> webEntities = new ArrayList<>();
-    private HashMap<Integer, WebEntity> webEntitiesIndex = new HashMap<>();
+    private List<WebEntity> webEntities;
+    private HashMap<Integer, WebEntity> webEntitiesIndex;
     private int currentWebEntityId = 1;
     
     // Singleton
     private WebEntities(){}
     public static WebEntities getInstance() { return INSTANCE; }
     
-    public void init() {
+    public void reset() {
         webEntities = new ArrayList<>();
-        try {
-            read();
-        } catch (FileNotFoundException ex) {
-            Logger.getLogger(WebEntities.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        webEntitiesIndex = new HashMap<>();
     }
 
     public void create(String[] prefixes) throws IOException {
@@ -73,6 +69,8 @@ public class WebEntities {
     }
     
     public void read() throws FileNotFoundException {
+        webEntities = new ArrayList<>();
+        webEntitiesIndex = new HashMap<>();
         File f = new File(webentitiesFileName);
         if(f.exists() && !f.isDirectory()) {
             Gson gson = new GsonBuilder().create();

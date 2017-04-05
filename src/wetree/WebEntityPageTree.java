@@ -35,8 +35,9 @@ public class WebEntityPageTree implements WebEntityPageIndex {
         
     private WebEntityPageTree() {
         try {
-            // Init
-            init();
+            // Create files
+            lruTreeFile = new RandomAccessFile(rootPath + "lrus.dat", "rw");
+            linkTreeFile = new RandomAccessFile(rootPath + "links.dat", "rw");
         } catch (FileNotFoundException ex) {
             Logger.getLogger(WebEntityPageTree.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -44,21 +45,11 @@ public class WebEntityPageTree implements WebEntityPageIndex {
     
     public static WebEntityPageTree getInstance() { return INSTANCE; }
     
-    private void init() throws FileNotFoundException {
-        // Create files
-        lruTreeFile = new RandomAccessFile(rootPath + "lrus.dat", "rw");
-        linkTreeFile = new RandomAccessFile(rootPath + "links.dat", "rw");
-
-        // If the files are empty, reset (which will respawn the stuff)
-        // If files exist, then just read them.
-        try {
-            if (lruTreeFile.length() == 0) {
-                reset();
-            } else {
-                WebEntities.getInstance().read();
-            }
-        } catch (IOException ex) {
-            Logger.getLogger(WebEntityPageTree.class.getName()).log(Level.SEVERE, null, ex);
+    public void init(boolean reset) throws FileNotFoundException {
+        if (reset) {
+            reset();
+        } else {
+            WebEntities.getInstance().read();
         }
     }
     
@@ -67,7 +58,8 @@ public class WebEntityPageTree implements WebEntityPageIndex {
         try {
             lruTreeFile.setLength(0);
             linkTreeFile.setLength(0);
-            
+            WebEntities.getInstance().reset();
+
             // Create a first node
             LruTreeNode lruNode = new LruTreeNode(lruTreeFile, nextnodeid++);
             lruNode.setChar("s".charAt(0)); // Note: s is convenient for LRUs
