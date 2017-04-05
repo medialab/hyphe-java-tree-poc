@@ -524,6 +524,17 @@ public class WebEntityPageTree implements WebEntityPageIndex {
         }
     }
     
+    @Override
+    public String getPrefix(String lru) {
+        try {
+            WalkHistory wh = followLru(lru);
+            return wh.lastWebEntityPrefix;
+        } catch (IOException ex) {
+            Logger.getLogger(WebEntityPageTree.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return "";
+    }
+    
     // Returns the node id of the lru if it exists, -1 else
     private WalkHistory followLru(String lru) throws IOException {
         WalkHistory wh = new WalkHistory();
@@ -552,6 +563,7 @@ public class WebEntityPageTree implements WebEntityPageIndex {
             int weid = lruNode.getWebEntity();
             if (weid > 0) {
                 wh.lastWebEntityId = weid;
+                wh.lastWebEntityPrefix = lru.substring(0, i+1);
             }
             
             // The char has been found.
@@ -948,6 +960,7 @@ public class WebEntityPageTree implements WebEntityPageIndex {
     
     private static class WalkHistory {
         public int lastWebEntityId = 0;
+        private String lastWebEntityPrefix;
         public long nodeid = -1;
         public boolean success = false;
         public WalkHistory() {}
