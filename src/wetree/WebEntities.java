@@ -45,24 +45,24 @@ public class WebEntities {
         }
     }
 
-    public void webentity_create(String[] prefixes) throws IOException {
+    public void create(String[] prefixes) throws IOException {
         WebEntity we = new WebEntity();
         we.setTreeId(currentWebEntityId++);
         we.setPrefixes(Arrays.asList(prefixes));
         webEntities.add(we);
-        webentity_write();
+        write();
         we.getPrefixes().forEach(lru->{
             WebEntityPageTree.getInstance().associatePrefixWithWebentity(lru, we.getTreeId());
         });
     }
     
-    public void webentity_create(String prefix) throws IOException {
+    public void create(String prefix) throws IOException {
         String[] prefixes = new String[1];
         prefixes[0] = prefix;
-        webentity_create(prefixes);
+        WebEntities.this.create(prefixes);
     }
     
-    private void webentity_write() throws IOException {
+    private void write() throws IOException {
         try (Writer writer = new FileWriter(webentitiesFileName)) {
             Gson gson = new GsonBuilder().setPrettyPrinting().create();
             gson.toJson(webEntities, writer);
@@ -83,7 +83,7 @@ public class WebEntities {
         }
     }
     
-    public List<WebEntity> webentity_getAll() {
+    public List<WebEntity> getAll() {
         return webEntities;
     }
 }
