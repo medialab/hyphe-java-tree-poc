@@ -82,6 +82,7 @@ public class WebEntitiesManager implements WebEntityPageIndex {
         }
     }
     
+    @Override
     public void addPage(String page) {
         try {
             // Add the lru to the lruTree
@@ -97,17 +98,20 @@ public class WebEntitiesManager implements WebEntityPageIndex {
             Logger.getLogger(WebEntitiesManager.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-     
-    public long addWebEntityPrefix(String lru, int weid) throws IOException {
-        // Add the lru to the lruTree
-        long nodeid = add(lru);
-
-        // The last child has to get the ending marker
-        LruTreeNode lruNode = new LruTreeNode(lruTreeFile, nodeid);
-        lruNode.setWebEntity(weid);
-        lruNode.write();
-        
-        return nodeid;
+    
+    @Override
+    public void associatePrefixWithWebentity(String lru, int weid) {
+        try {
+            // Add the lru to the lruTree
+            long nodeid = add(lru);
+            
+            // The last child has to get the ending marker
+            LruTreeNode lruNode = new LruTreeNode(lruTreeFile, nodeid);
+            lruNode.setWebEntity(weid);
+            lruNode.write();
+        } catch (IOException ex) {
+            Logger.getLogger(WebEntitiesManager.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
     
     public void addLink(String sourcelru, String targetlru) throws IOException {
@@ -912,11 +916,7 @@ public class WebEntitiesManager implements WebEntityPageIndex {
         webEntities.add(we);
         webentity_write();
         we.getPrefixes().forEach(lru->{
-            try {
-                addWebEntityPrefix(lru, we.getTreeId());
-            } catch (IOException ex) {
-                Logger.getLogger(WebEntitiesManager.class.getName()).log(Level.SEVERE, null, ex);
-            }
+            associatePrefixWithWebentity(lru, we.getTreeId());
         });
     }
     
