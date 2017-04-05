@@ -545,6 +545,19 @@ public class WebEntityPageTree implements WebEntityPageIndex {
         }
         return -1;
     }
+    
+    @Override
+    public int getWebentity_fromPrefix(String prefix) {
+        WalkHistory wh;
+        try {
+            wh = followLru(prefix);
+            LruTreeNode lruNode = new LruTreeNode(lruTreeFile, wh.nodeid);
+            return lruNode.getWebEntity();
+        } catch (IOException ex) {
+            Logger.getLogger(WebEntityPageTree.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return -1;
+    }
 
     // Returns the node id of the lru if it exists, -1 else
     private WalkHistory followLru(String lru) throws IOException {
