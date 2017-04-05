@@ -25,63 +25,63 @@ public class Wetree {
     public static void main(String[] args) throws IOException {
         String path = System.getProperty("user.dir") + File.separator + "data" + File.separator;
         
-        WebEntitiesManager wem;
-        wem = new WebEntitiesManager(path);
+        WebEntityPageTree wept;
+        wept = new WebEntityPageTree(path);
         
-        wem.reset();
-        buildFakeCorpus(wem, 5, 100);
+        wept.reset();
+        buildFakeCorpus(wept, 5, 100);
         
-        benchmarkRandomWebEntity(wem, true);
-//        benchmarkAllWebEntities(wem, false);
+        benchmarkRandomWebEntity(wept, true);
+//        benchmarkAllWebEntities(wept, false);
 
-//        foodchainBenchmark(wem);
+//        foodchainBenchmark(wept);
         
-//        wem.log();
+//        wept.log();
 
     }
     
-    private static void foodchainBenchmark(WebEntitiesManager wem) throws IOException {
-        wem.addPage("Plankton:Phytoplankton");
-        wem.addPage("Plankton:Zooplankton");
-        wem.addPage("Crustacean:Prawn");
-        wem.addPage("Fish:Fish");
-        wem.addPage("Shell:Mussels");
-        wem.addPage("Crustacean:Crab");
-        wem.addPage("Bird:Gull");
-        wem.addPage("Plant:Seaweed");
-        wem.addPage("Shell:Limpets");
-        wem.addPage("Shell:Whelk");
-        wem.addPage("Crustacean:Lobster");
+    private static void foodchainBenchmark(WebEntityPageTree wept) throws IOException {
+        wept.addPage("Plankton:Phytoplankton");
+        wept.addPage("Plankton:Zooplankton");
+        wept.addPage("Crustacean:Prawn");
+        wept.addPage("Fish:Fish");
+        wept.addPage("Shell:Mussels");
+        wept.addPage("Crustacean:Crab");
+        wept.addPage("Bird:Gull");
+        wept.addPage("Plant:Seaweed");
+        wept.addPage("Shell:Limpets");
+        wept.addPage("Shell:Whelk");
+        wept.addPage("Crustacean:Lobster");
         
-        wem.webentity_create("Plankton");
-        wem.webentity_create("Crustacean");
-        wem.webentity_create("Fish");
-        wem.webentity_create("Shell");
-        wem.webentity_create("Bird");
-        wem.webentity_create("Plant");
+        wept.webentity_create("Plankton");
+        wept.webentity_create("Crustacean");
+        wept.webentity_create("Fish");
+        wept.webentity_create("Shell");
+        wept.webentity_create("Bird");
+        wept.webentity_create("Plant");
         
-        wem.addLink("Plankton:Phytoplankton", "Plankton:Zooplankton");
-        wem.addLink("Plankton:Phytoplankton", "Shell:Mussels");
-        wem.addLink("Plankton:Zooplankton", "Crustacean:Prawn");
-        wem.addLink("Plankton:Zooplankton", "Shell:Mussels");
-        wem.addLink("Crustacean:Prawn", "Fish:Fish");
-        wem.addLink("Crustacean:Prawn", "Bird:Gull");
-        wem.addLink("Shell:Mussels", "Bird:Gull");
-        wem.addLink("Shell:Mussels", "Crustacean:Crab");
-        wem.addLink("Shell:Mussels", "Crustacean:Lobster");
-        wem.addLink("Shell:Mussels", "Shell:Whelk");
-        wem.addLink("Crustacean:Crab", "Bird:Gull");
-        wem.addLink("Crustacean:Crab", "Crustacean:Lobster");
-        wem.addLink("Plant:Seaweed", "Shell:Limpets");
-        wem.addLink("Shell:Limpets", "Crustacean:Crab");
-        wem.addLink("Shell:Limpets", "Bird:Gull");
-        wem.addLink("Shell:Limpets", "Shell:Whelk");
-        wem.addLink("Shell:Limpets", "Crustacean:Lobster");
-        wem.addLink("Shell:Whelk", "Bird:Gull");
-        wem.addLink("Shell:Whelk", "Crustacean:Lobster");
+        wept.addLink("Plankton:Phytoplankton", "Plankton:Zooplankton");
+        wept.addLink("Plankton:Phytoplankton", "Shell:Mussels");
+        wept.addLink("Plankton:Zooplankton", "Crustacean:Prawn");
+        wept.addLink("Plankton:Zooplankton", "Shell:Mussels");
+        wept.addLink("Crustacean:Prawn", "Fish:Fish");
+        wept.addLink("Crustacean:Prawn", "Bird:Gull");
+        wept.addLink("Shell:Mussels", "Bird:Gull");
+        wept.addLink("Shell:Mussels", "Crustacean:Crab");
+        wept.addLink("Shell:Mussels", "Crustacean:Lobster");
+        wept.addLink("Shell:Mussels", "Shell:Whelk");
+        wept.addLink("Crustacean:Crab", "Bird:Gull");
+        wept.addLink("Crustacean:Crab", "Crustacean:Lobster");
+        wept.addLink("Plant:Seaweed", "Shell:Limpets");
+        wept.addLink("Shell:Limpets", "Crustacean:Crab");
+        wept.addLink("Shell:Limpets", "Bird:Gull");
+        wept.addLink("Shell:Limpets", "Shell:Whelk");
+        wept.addLink("Shell:Limpets", "Crustacean:Lobster");
+        wept.addLink("Shell:Whelk", "Bird:Gull");
+        wept.addLink("Shell:Whelk", "Crustacean:Lobster");
         
         System.out.println("\nWeb Entities:");
-        ArrayList<WebEntity> wes = (ArrayList<WebEntity>) wem.webentity_getAll();
+        ArrayList<WebEntity> wes = (ArrayList<WebEntity>) wept.webentity_getAll();
         wes.forEach(we->{
             try {
                 System.out.print(we.getTreeId() + ". ");
@@ -91,13 +91,13 @@ public class Wetree {
                 System.out.println();
                 
                 System.out.println("   LRUs:");
-                ArrayList<String> lrus = wem.getLrusFromWebEntity(we.getPrefixes());
+                ArrayList<String> lrus = wept.getPages(we.getPrefixes());
                 lrus.forEach(lru->{
                     System.out.println("   - " + lru);
                 });
                 
                 System.out.println("   Links to other web entities:");
-                ArrayList<Integer> weids = wem.getWebEntityOutLinks(we.getPrefixes());
+                ArrayList<Integer> weids = wept.getWebEntityOutLinks(we.getPrefixes());
                 weids.forEach(weid->{
                     System.out.println("   -> " + weid);
                 });
@@ -107,31 +107,31 @@ public class Wetree {
             }
         });
         
-        ArrayList<String[]> links = wem._geAllLruLinks_SLOW();
+        ArrayList<String[]> links = wept._geAllLruLinks_SLOW();
         System.out.println("\nLRU Links:");
         links.forEach(link->{
             System.out.println(link[0] + " -> " + link[1]);
         });
     }
     
-    private static void benchmarkAllWebEntities(WebEntitiesManager wem, boolean display) {
-        ArrayList<WebEntity> wes = (ArrayList<WebEntity>) wem.webentity_getAll();
+    private static void benchmarkAllWebEntities(WebEntityPageTree wept, boolean display) {
+        ArrayList<WebEntity> wes = (ArrayList<WebEntity>) wept.webentity_getAll();
         wes.forEach(we->{
             try {
-                benchmarkWebEntity(wem, we, display);
+                benchmarkWebEntity(wept, we, display);
             } catch (IOException ex) {
                 Logger.getLogger(Wetree.class.getName()).log(Level.SEVERE, null, ex);
             }
         });
     }
     
-    private static void benchmarkRandomWebEntity(WebEntitiesManager wem, boolean display) throws IOException {
-        ArrayList<WebEntity> wes = (ArrayList<WebEntity>) wem.webentity_getAll();
+    private static void benchmarkRandomWebEntity(WebEntityPageTree wept, boolean display) throws IOException {
+        ArrayList<WebEntity> wes = (ArrayList<WebEntity>) wept.webentity_getAll();
         WebEntity we = wes.get(ThreadLocalRandom.current().nextInt(1, wes.size()));
-        benchmarkWebEntity(wem, we, display);
+        benchmarkWebEntity(wept, we, display);
     }
     
-    private static void benchmarkWebEntity(WebEntitiesManager wem, WebEntity we, boolean display) throws IOException {
+    private static void benchmarkWebEntity(WebEntityPageTree wept, WebEntity we, boolean display) throws IOException {
         try {
             if (display) {
                 System.out.print(we.getTreeId() + ". ");
@@ -142,13 +142,13 @@ public class Wetree {
             }
 
             if (display) System.out.println("   LRUs:");
-            ArrayList<String> lrus = wem.getLrusFromWebEntity(we.getPrefixes());
+            ArrayList<String> lrus = wept.getPages(we.getPrefixes());
             if (display) lrus.forEach(lru->{
                 System.out.println("   - " + lru);
             });
 
             if (display) System.out.println("   Links to other web entities:");
-            ArrayList<Integer> weids = wem.getWebEntityOutLinks(we.getPrefixes());
+            ArrayList<Integer> weids = wept.getWebEntityOutLinks(we.getPrefixes());
             if (display) weids.forEach(weid->{
                 System.out.println("   -> " + weid);
             });
@@ -162,7 +162,7 @@ public class Wetree {
     }
 
 
-    private static void buildFakeCorpus(WebEntitiesManager wem, int webentity_count, int link_count) throws IOException {
+    private static void buildFakeCorpus(WebEntityPageTree wept, int webentity_count, int link_count) throws IOException {
         
         // Init
         ArrayList<String> lrus = new ArrayList<>();
@@ -218,11 +218,11 @@ public class Wetree {
                         lru += stems.get(ThreadLocalRandom.current().nextInt(0, stems.size())) + "|";
                     }
                     lrus.add(lru);
-                    wem.addPage(lru);
+                    wept.addPage(lru);
                 }
             }            
             
-            wem.webentity_create(prefixes);
+            wept.webentity_create(prefixes);
         }
         System.out.println(" done.");
         System.out.println(lrus.size() + " LRUs were created in that process.");
@@ -232,7 +232,7 @@ public class Wetree {
         while (link_count-- > 0) {
             String sourcelru = lrus.get(ThreadLocalRandom.current().nextInt(1, lrus.size()));
             String targetlru = lrus.get(ThreadLocalRandom.current().nextInt(1, lrus.size()));
-            wem.addLink(sourcelru, targetlru);
+            wept.addLink(sourcelru, targetlru);
         }
         System.out.println(" done.");
     }

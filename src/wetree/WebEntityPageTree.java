@@ -6,18 +6,8 @@
 package wetree;
 
 import com.google.common.primitives.Chars;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.reflect.TypeToken;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.io.Writer;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -32,25 +22,19 @@ import java.util.logging.Logger;
  *
  * @author jacomyma
  */
-public class WebEntitiesManager implements WebEntityPageIndex {
+public class WebEntityPageTree implements WebEntityPageIndex {
     private final String rootPath;
     private final RandomAccessFile lruTreeFile;
     private final RandomAccessFile linkTreeFile;
     private long nextnodeid = 1;
     private long nextlinkid = 1;
-    
-    // Web Entity related stuff (for convenience, but should be done elswhere)
-    private final String webentitiesFileName;
-    private List<WebEntity> webEntities = new ArrayList<>();
-    private int currentWebEntityId = 1;
-    
-    public WebEntitiesManager(String p) throws IOException{
+        
+    public WebEntityPageTree(String p) throws IOException{
         rootPath = p;
  
         // Create files
         lruTreeFile = new RandomAccessFile(rootPath + "lrus.dat", "rw");
         linkTreeFile = new RandomAccessFile(rootPath + "links.dat", "rw");
-        webentitiesFileName = rootPath + "webentities.json";
 
         init();
     }
@@ -78,7 +62,7 @@ public class WebEntitiesManager implements WebEntityPageIndex {
             linkTreeFile.setLength(0);
             init();
         } catch (IOException ex) {
-            Logger.getLogger(WebEntitiesManager.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(WebEntityPageTree.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
     
@@ -95,7 +79,7 @@ public class WebEntitiesManager implements WebEntityPageIndex {
             lruNode.setEnding(true);
             lruNode.write();
         } catch (IOException ex) {
-            Logger.getLogger(WebEntitiesManager.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(WebEntityPageTree.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
     
@@ -110,7 +94,7 @@ public class WebEntitiesManager implements WebEntityPageIndex {
             lruNode.setWebEntity(weid);
             lruNode.write();
         } catch (IOException ex) {
-            Logger.getLogger(WebEntitiesManager.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(WebEntityPageTree.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
     
@@ -313,7 +297,7 @@ public class WebEntitiesManager implements WebEntityPageIndex {
                             link[1] = targetLru;
                             result.add(link);
                         } catch (IOException ex) {
-                            Logger.getLogger(WebEntitiesManager.class.getName()).log(Level.SEVERE, null, ex);
+                            Logger.getLogger(WebEntityPageTree.class.getName()).log(Level.SEVERE, null, ex);
                         }
                     });                    
                 }
@@ -352,7 +336,7 @@ public class WebEntitiesManager implements WebEntityPageIndex {
     }
     
     // Return LRUs of a known web entity
-    public ArrayList<String> getLrusFromWebEntity(List<String> prefixes) throws IOException {
+    private ArrayList<String> getPages(List<String> prefixes) {
         ArrayList<String> result = new ArrayList<>();
         prefixes.forEach(lru->{
             long nodeid;
@@ -369,7 +353,7 @@ public class WebEntitiesManager implements WebEntityPageIndex {
                     });
                 }
             } catch (IOException ex) {
-                Logger.getLogger(WebEntitiesManager.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(WebEntityPageTree.class.getName()).log(Level.SEVERE, null, ex);
             }
         });
         return result;
@@ -412,12 +396,12 @@ public class WebEntitiesManager implements WebEntityPageIndex {
                             
                             
                         } catch (IOException ex) {
-                            Logger.getLogger(WebEntitiesManager.class.getName()).log(Level.SEVERE, null, ex);
+                            Logger.getLogger(WebEntityPageTree.class.getName()).log(Level.SEVERE, null, ex);
                         }
                     });
                 }
             } catch (IOException ex) {
-                Logger.getLogger(WebEntitiesManager.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(WebEntityPageTree.class.getName()).log(Level.SEVERE, null, ex);
             }
         });
         ArrayList<Integer> result = new ArrayList<>();
@@ -907,48 +891,4 @@ public class WebEntitiesManager implements WebEntityPageIndex {
 
         }
     }
-    
-    // Pure web entity helpers that should not really be part of this
-    public void webentity_create(String[] prefixes) throws IOException {
-        WebEntity we = new WebEntity();
-        we.setTreeId(currentWebEntityId++);
-        we.setPrefixes(Arrays.asList(prefixes));
-        webEntities.add(we);
-        webentity_write();
-        we.getPrefixes().forEach(lru->{
-            associatePrefixWithWebentity(lru, we.getTreeId());
-        });
-    }
-    
-    public void webentity_create(String prefix) throws IOException {
-        String[] prefixes = new String[1];
-        prefixes[0] = prefix;
-        WebEntitiesManager.this.webentity_create(prefixes);
-    }
-    
-    private void webentity_write() throws IOException {
-        try (Writer writer = new FileWriter(webentitiesFileName)) {
-            Gson gson = new GsonBuilder().setPrettyPrinting().create();
-            gson.toJson(webEntities, writer);
-        }
-    }
-    
-    private void webentity_read() throws FileNotFoundException {
-        File f = new File(webentitiesFileName);
-        if(f.exists() && !f.isDirectory()) { 
-            Gson gson = new GsonBuilder().create();
-            BufferedReader br = new BufferedReader(new FileReader(webentitiesFileName));
-            Type type = new TypeToken<List<WebEntity>>(){}.getType();
-            webEntities = gson.fromJson(br, type);
-            webEntities.forEach(we->{
-                currentWebEntityId = Math.max(currentWebEntityId, we.getTreeId());
-            });
-            currentWebEntityId++;
-        }
-    }
-    
-    public List<WebEntity> webentity_getAll() {
-        return webEntities;
-    }
-    
 }
