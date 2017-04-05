@@ -5,11 +5,13 @@
  */
 package wetree;
 
+import com.mongodb.client.MongoCursor;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.bson.Document;
 
 /**
  *
@@ -234,4 +236,24 @@ public class Wetree {
         System.out.println(" done.");
     }
     
+    private static void mongoTest() {
+
+        // Instantiating and resetting DB files
+        WebEntityPageTree wept;
+        wept = WebEntityPageTree.getInstance();
+
+        wept.reset();
+
+        // Creating a mongo cursor
+        MongoConnector connector = new MongoConnector();
+        MongoCursor<Document> cursor = connector.getPagesCursor();
+
+        while (cursor.hasNext()) {
+            Document doc = cursor.next();
+            String lru = doc.getString("lru");
+
+            // First we need to add the page's lru
+            wept.addPage(lru);
+        }
+    }
 }
