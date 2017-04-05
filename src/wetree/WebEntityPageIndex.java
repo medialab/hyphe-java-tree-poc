@@ -24,9 +24,10 @@ public interface WebEntityPageIndex {
     public int getWebentity(String lru);
     public int getWebentity_fromPrefix(String prefix);
     public void addPlink(String sourcePage, String targetPage);
+    public void addPlink(PLink pLink);
 //    public List<PLink> getPlinks(String page);
 //    public List<PLink> getPlinksInbound(String page);
-//    public List<PLink> getPlinksOutbound(String page);
+    public List<PLink> getPlinksOutbound(String page);
 //    public List<WELink> getWelinks(String page);
 //    public List<WELink> getWelinksInbound(String page);
 //    public List<WELink> getWelinksOutbound(String page);
@@ -55,10 +56,6 @@ public interface WebEntityPageIndex {
     // Internal classes
     public static class QueryParameters {
         public QueryParameters() {}
-    }
-    // Page Link
-    public static class PLink {
-        public PLink() {}
     }
     // Web Entity Link
     public static class WELink {

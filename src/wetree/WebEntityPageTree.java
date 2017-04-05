@@ -102,6 +102,11 @@ public class WebEntityPageTree implements WebEntityPageIndex {
     }
     
     @Override
+    public void addPlink(PLink pLink) {
+        addPlink(pLink.sourcePage, pLink.targetPage);
+    }
+
+    @Override
     public void addPlink(String sourcePage, String targetPage) {
         try {
             long sourcenodeid = add(sourcePage).nodeid;
@@ -121,6 +126,36 @@ public class WebEntityPageTree implements WebEntityPageIndex {
         } catch (IOException ex) {
             Logger.getLogger(WebEntityPageTree.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+    
+    @Override
+    public List<PLink> getPlinksOutbound(String page) {
+        ArrayList<PLink> result = new ArrayList<>();
+        ArrayList<Long> targetNodeIds = new ArrayList<>();
+        try {
+            long nodeid = followLru(page).nodeid;
+            // Follow the links
+            LinkTreeNode linkNode = new LinkTreeNode(linkTreeFile, nodeid);
+            targetNodeIds.add(linkNode.getLru());
+            long next = linkNode.getNext();
+            while(next > 0) {
+                linkNode.read(next);
+                targetNodeIds.add(linkNode.getLru());
+                next = linkNode.getNext();
+            }
+            targetNodeIds.forEach(tnodeid->{   
+                try {
+                    String targetLru = windupLru(tnodeid);
+                    PLink pLink = new PLink(page, targetLru);
+                    result.add(pLink);
+                } catch (IOException ex) {
+                    Logger.getLogger(WebEntityPageTree.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            });
+        } catch (IOException ex) {
+            Logger.getLogger(WebEntityPageTree.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return result;
     }
     
     // Return all LRUs - walks all the tree, SLOW, mostly for monitoring
