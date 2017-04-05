@@ -36,7 +36,7 @@ public class WebEntities {
     
     public void init() {
         webEntities = new ArrayList<>();
-        webentity_read();
+        read();
     }
 
     public void webentity_create(String[] prefixes) throws IOException {
@@ -63,7 +63,7 @@ public class WebEntities {
         }
     }
     
-    private void webentity_read() throws FileNotFoundException {
+    public void read() throws FileNotFoundException {
         File f = new File(webentitiesFileName);
         if(f.exists() && !f.isDirectory()) {
             Gson gson = new GsonBuilder().create();

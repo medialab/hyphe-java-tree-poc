@@ -6,6 +6,7 @@
 package wetree;
 
 import com.google.common.primitives.Chars;
+import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
@@ -23,7 +24,7 @@ import java.util.logging.Logger;
  * @author jacomyma
  */
 public class WebEntityPageTree implements WebEntityPageIndex {
-    private final String rootPath;
+    private final String rootPath System.getProperty("user.dir") + File.separator + "data" + File.separator;
     private final RandomAccessFile lruTreeFile;
     private final RandomAccessFile linkTreeFile;
     private long nextnodeid = 1;
@@ -42,16 +43,9 @@ public class WebEntityPageTree implements WebEntityPageIndex {
     private void init() throws IOException {        
         // Keep init only if file empty
         if (lruTreeFile.length() == 0) {
-            
-            // Create a first node
-            LruTreeNode lruNode = new LruTreeNode(lruTreeFile, nextnodeid++);
-            lruNode.setChar("s".charAt(0)); // Note: s is convenient for LRUs
-            lruNode.write();
-            
-            webEntities = new ArrayList<>();
-            currentWebEntityId = 1;
+            reset();
         } else {
-            webentity_read();
+            WebEntities.getInstance().read();
         }
     }
     
@@ -60,7 +54,11 @@ public class WebEntityPageTree implements WebEntityPageIndex {
         try {
             lruTreeFile.setLength(0);
             linkTreeFile.setLength(0);
-            init();
+            
+            // Create a first node
+            LruTreeNode lruNode = new LruTreeNode(lruTreeFile, nextnodeid++);
+            lruNode.setChar("s".charAt(0)); // Note: s is convenient for LRUs
+            lruNode.write();
         } catch (IOException ex) {
             Logger.getLogger(WebEntityPageTree.class.getName()).log(Level.SEVERE, null, ex);
         }

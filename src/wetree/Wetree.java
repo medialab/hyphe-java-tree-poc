@@ -23,8 +23,6 @@ public class Wetree {
      * @throws java.io.IOException
      */
     public static void main(String[] args) throws IOException {
-        String path = System.getProperty("user.dir") + File.separator + "data" + File.separator;
-        
         WebEntityPageTree wept;
         wept = new WebEntityPageTree(path);
         
