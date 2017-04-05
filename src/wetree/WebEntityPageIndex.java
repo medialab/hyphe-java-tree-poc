@@ -53,9 +53,6 @@ public interface WebEntityPageIndex {
 //    public List<String> slow_getPrefixes(int weid);
 
     // Internal classes
-    public static class WebEntityCreationRule {
-        public WebEntityCreationRule() {}
-    }
     public static class QueryParameters {
         public QueryParameters() {}
     }

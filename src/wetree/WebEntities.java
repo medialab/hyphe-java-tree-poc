@@ -47,12 +47,12 @@ public class WebEntities {
 
     public void create(String[] prefixes) throws IOException {
         WebEntity we = new WebEntity();
-        we.setTreeId(currentWebEntityId++);
+        we.setId(currentWebEntityId++);
         we.setPrefixes(Arrays.asList(prefixes));
         webEntities.add(we);
         write();
         we.getPrefixes().forEach(lru->{
-            WebEntityPageTree.getInstance().associatePrefixWithWebentity(lru, we.getTreeId());
+            WebEntityPageTree.getInstance().associatePrefixWithWebentity(lru, we.getId());
         });
     }
     
@@ -77,7 +77,7 @@ public class WebEntities {
             Type type = new TypeToken<List<WebEntity>>(){}.getType();
             webEntities = gson.fromJson(br, type);
             webEntities.forEach(we->{
-                currentWebEntityId = Math.max(currentWebEntityId, we.getTreeId());
+                currentWebEntityId = Math.max(currentWebEntityId, we.getId());
             });
             currentWebEntityId++;
         }

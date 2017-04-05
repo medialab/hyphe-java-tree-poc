@@ -17,56 +17,60 @@ import java.io.IOException;
 import java.io.Writer;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
- * @author boogheta
+ * @author jacomyma
  */
 public class WebEntityCreationRules {
     private static final WebEntityCreationRules INSTANCE = new WebEntityCreationRules();
-    private final String WECRsFileName = System.getProperty("user.dir") + File.separator + "data" + File.separator + File.separator + "data" + "WECRs.json";
-    private List<WebEntityCreationRule> WECRs = new ArrayList<>();
-
+    private final String wecrFileName = System.getProperty("user.dir") + File.separator + "data" + File.separator + File.separator + "data" + "webentities.json";
+    private List<WebEntityCreationRule> rules = new ArrayList<>();
+    private int currentWebEntityId = 1;
+    
     // Singleton
     private WebEntityCreationRules(){}
     public static WebEntityCreationRules getInstance() { return INSTANCE; }
-
+    
     public void init() {
-        webEntityCreationRules = new ArrayList<>();
-        WECR_read();
-    }
-
-    public void WECR_create(prefix, regexp) throws IOException {
-        WebEntityCreationRule WECR = new WebEntityCreationRule();
-        WECR.setPrefix(prefix);
-        WECR.setRegexp(regexp);
-        webEntityCreationRules.add(WECR);
-        WECR_write();
-    }
-
-    public void WECR_default_create(String regexp) throws IOException {
-        WebEntityPageTree.this.WECR_create("", regexp);
-    }
-
-    private void WECR_write() throws IOException {
-        try (Writer writer = new FileWriter(WECRsFileName)) {
-            Gson gson = new GsonBuilder().setPrettyPrinting().create();
-            gson.toJson(webEntityCreationRules, writer);
+        rules = new ArrayList<>();
+        try {
+            read();
+        } catch (FileNotFoundException ex) {
+            Logger.getLogger(WebEntities.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
-    private void WECR_read() throws FileNotFoundException {
-        File f = new File(WECRsFileName);
+    public void create(String prefix, String regexp) throws IOException {
+        WebEntityCreationRule wecr = new WebEntityCreationRule();
+        wecr.setPrefix(prefix);
+        wecr.setRegexp(regexp);
+        rules.add(wecr);
+        write();
+    }
+    
+    private void write() throws IOException {
+        try (Writer writer = new FileWriter(wecrFileName)) {
+            Gson gson = new GsonBuilder().setPrettyPrinting().create();
+            gson.toJson(rules, writer);
+        }
+    }
+    
+    public void read() throws FileNotFoundException {
+        File f = new File(wecrFileName);
         if(f.exists() && !f.isDirectory()) {
             Gson gson = new GsonBuilder().create();
-            BufferedReader br = new BufferedReader(new FileReader(WECRsFileName));
-            Type type = new TypeToken<List<WebEntityCreationRule>>(){}.getType();
-            webEntityCreationRules = gson.fromJson(br, type);
+            BufferedReader br = new BufferedReader(new FileReader(wecrFileName));
+            Type type = new TypeToken<List<WebEntity>>(){}.getType();
+            rules = gson.fromJson(br, type);
         }
     }
-
-    public List<WebEntityCreationRule> WECR_getAll() {
-        return webEntityCreationRules;
+    
+    public List<WebEntityCreationRule> getAll() {
+        return rules;
     }
 }

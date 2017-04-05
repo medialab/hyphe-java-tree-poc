@@ -81,7 +81,7 @@ public class Wetree {
         ArrayList<WebEntity> wes = (ArrayList<WebEntity>) wept.webentity_getAll();
         wes.forEach(we->{
             try {
-                System.out.print(we.getTreeId() + ". ");
+                System.out.print(we.getId() + ". ");
                 we.getPrefixes().forEach(p->{
                     System.out.print(p + " ");
                 });
@@ -131,7 +131,7 @@ public class Wetree {
     private static void benchmarkWebEntity(WebEntityPageTree wept, WebEntity we, boolean display) throws IOException {
         try {
             if (display) {
-                System.out.print(we.getTreeId() + ". ");
+                System.out.print(we.getId() + ". ");
                 we.getPrefixes().forEach(p->{
                     System.out.print(p + " ");
                 });
@@ -151,7 +151,7 @@ public class Wetree {
             });
             
             if (!display) {
-                System.out.println("Web Entity " + we.getTreeId() + ": retrieved " + lrus.size() + " LRUs and links to " + weids.size() + " web entities");
+                System.out.println("Web Entity " + we.getId() + ": retrieved " + lrus.size() + " LRUs and links to " + weids.size() + " web entities");
             }
         } catch (IOException ex) {
             Logger.getLogger(Wetree.class.getName()).log(Level.SEVERE, null, ex);
