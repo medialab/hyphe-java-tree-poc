@@ -29,7 +29,7 @@ public class Wetree {
         wem = new WebEntitiesManager(path);
         
         wem.reset();
-        buildFakeCorpus(wem, 1500, 5000000);
+//        buildFakeCorpus(wem, 2, 100);
         
 //        benchmarkRandomWebEntity(wem);
 //        benchmarkAllWebEntities(wem, false);
