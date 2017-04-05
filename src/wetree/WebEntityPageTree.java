@@ -347,6 +347,28 @@ public class WebEntityPageTree implements WebEntityPageIndex {
     }
     
     @Override
+    public ArrayList<String> getPages(String prefix) {
+        ArrayList<String> result = new ArrayList<>();
+        long nodeid;
+        try {
+            nodeid = followLru(prefix);
+            if (nodeid < 0) {
+                throw new java.lang.RuntimeException(
+                    "getPages: Prefix '" + prefix + "' could not be found in the tree"
+                );
+            } else {
+                ArrayList<String> suffixes = walkWebEntityForLrus(nodeid);
+                suffixes.forEach(suffix->{
+                    result.add(prefix + suffix);
+                });
+            }
+        } catch (IOException ex) {
+            Logger.getLogger(WebEntityPageTree.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return result;
+    }
+    
+    @Override
     public ArrayList<String> getPages(int weid) {
         WebEntity we = WebEntities.getInstance().get(weid);
         if (isNull(we)) {
@@ -366,7 +388,7 @@ public class WebEntityPageTree implements WebEntityPageIndex {
                 nodeid = followLru(lru);
                 if (nodeid < 0) {
                     throw new java.lang.RuntimeException(
-                        "Prefix '" + lru + "' could not be found in the tree"
+                        "getPages: Prefix '" + lru + "' could not be found in the tree"
                     );
                 } else {
                     ArrayList<String> suffixes = walkWebEntityForLrus(nodeid);
