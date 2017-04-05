@@ -50,12 +50,12 @@ public class Wetree {
         wept.addPage("Shell:Whelk");
         wept.addPage("Crustacean:Lobster");
         
-        wept.webentity_create("Plankton");
-        wept.webentity_create("Crustacean");
-        wept.webentity_create("Fish");
-        wept.webentity_create("Shell");
-        wept.webentity_create("Bird");
-        wept.webentity_create("Plant");
+        WebEntities.getInstance().create("Plankton");
+        WebEntities.getInstance().create("Crustacean");
+        WebEntities.getInstance().create("Fish");
+        WebEntities.getInstance().create("Shell");
+        WebEntities.getInstance().create("Bird");
+        WebEntities.getInstance().create("Plant");
         
         wept.addLink("Plankton:Phytoplankton", "Plankton:Zooplankton");
         wept.addLink("Plankton:Phytoplankton", "Shell:Mussels");
@@ -78,7 +78,7 @@ public class Wetree {
         wept.addLink("Shell:Whelk", "Crustacean:Lobster");
         
         System.out.println("\nWeb Entities:");
-        ArrayList<WebEntity> wes = (ArrayList<WebEntity>) wept.webentity_getAll();
+        ArrayList<WebEntity> wes = (ArrayList<WebEntity>) WebEntities.getInstance().getAll();
         wes.forEach(we->{
             try {
                 System.out.print(we.getId() + ". ");
@@ -112,7 +112,7 @@ public class Wetree {
     }
     
     private static void benchmarkAllWebEntities(WebEntityPageTree wept, boolean display) {
-        ArrayList<WebEntity> wes = (ArrayList<WebEntity>) wept.webentity_getAll();
+        ArrayList<WebEntity> wes = (ArrayList<WebEntity>) WebEntities.getInstance().getAll();
         wes.forEach(we->{
             try {
                 benchmarkWebEntity(wept, we, display);
@@ -123,7 +123,7 @@ public class Wetree {
     }
     
     private static void benchmarkRandomWebEntity(WebEntityPageTree wept, boolean display) throws IOException {
-        ArrayList<WebEntity> wes = (ArrayList<WebEntity>) wept.webentity_getAll();
+        ArrayList<WebEntity> wes = (ArrayList<WebEntity>) WebEntities.getInstance().getAll();
         WebEntity we = wes.get(ThreadLocalRandom.current().nextInt(1, wes.size()));
         benchmarkWebEntity(wept, we, display);
     }
@@ -219,7 +219,7 @@ public class Wetree {
                 }
             }            
             
-            wept.webentity_create(prefixes);
+            WebEntities.getInstance().create(prefixes);
         }
         System.out.println(" done.");
         System.out.println(lrus.size() + " LRUs were created in that process.");

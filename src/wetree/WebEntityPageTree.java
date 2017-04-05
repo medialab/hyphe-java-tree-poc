@@ -346,7 +346,7 @@ public class WebEntityPageTree implements WebEntityPageIndex {
     }
     
     // Return LRUs of a known web entity
-    private ArrayList<String> getPages(List<String> prefixes) {
+    public ArrayList<String> getPages(List<String> prefixes) {
         ArrayList<String> result = new ArrayList<>();
         prefixes.forEach(lru->{
             long nodeid;
