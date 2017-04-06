@@ -103,7 +103,37 @@ public class Wetree {
         System.out.println("\n:: Test getWebentity(String lru) on: 's:http|h:com|h:site|h:www|p:people|p:maman|'");
         System.out.println("   > " + wept.getWebentity("s:http|h:com|h:site|h:www|p:people|p:maman|"));
 
+        System.out.println("\n:: Test getPlinks(String page) on: 's:http|h:com|h:site|p:people|p:papa|'");
+        wept.getPlinks("s:http|h:com|h:site|p:people|p:papa|").forEach(pLink->{
+            System.out.println("   - " + pLink.sourcePage + " => " + pLink.targetPage);
+        });
 
+        System.out.println("\n:: Test getPlinksInbound(String page) on: 's:http|h:com|h:site|p:people|p:papa|'");
+        wept.getPlinksInbound("s:http|h:com|h:site|p:people|p:papa|").forEach(pLink->{
+            System.out.println("   - " + pLink.sourcePage + " => " + pLink.targetPage);
+        });
+
+        System.out.println("\n:: Test getPlinksOutbound(String page) on: 's:http|h:com|h:site|p:people|p:papa|'");
+        wept.getPlinksOutbound("s:http|h:com|h:site|p:people|p:papa|").forEach(pLink->{
+            System.out.println("   - " + pLink.sourcePage + " => " + pLink.targetPage);
+        });
+        
+        System.out.println("\n:: Test getWelinks(String page) on: 's:http|h:com|h:site|p:people|p:papa|'");
+        wept.getWelinks("s:http|h:com|h:site|p:people|p:papa|").forEach(weLink->{
+            System.out.println("   - " + weLink.sourceWebentityid + " => " + weLink.targetWebentityid);
+        });
+        
+        
+        System.out.println("\n:: Test getWelinksInbound(String page) on: 's:http|h:com|h:site|p:people|p:papa|'");
+        wept.getWelinksInbound("s:http|h:com|h:site|p:people|p:papa|").forEach(weLink->{
+            System.out.println("   - " + weLink.sourceWebentityid + " => " + weLink.targetWebentityid);
+        });
+        
+        System.out.println("\n:: Test getWelinksOutbound(String page) on: 's:http|h:com|h:site|p:people|p:papa|'");
+        wept.getWelinksOutbound("s:http|h:com|h:site|p:people|p:papa|").forEach(weLink->{
+            System.out.println("   - " + weLink.sourceWebentityid + " => " + weLink.targetWebentityid);
+        });
+        
 //        wept.log();
     }
     

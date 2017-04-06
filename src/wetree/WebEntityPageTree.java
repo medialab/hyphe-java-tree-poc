@@ -598,6 +598,7 @@ public class WebEntityPageTree implements WebEntityPageIndex {
     
     @Override
     public List<WELink> getWelinksInbound(String page) {
+        // FIXME: what to do with internal links?
         int weid = getWebentity(page);
         ArrayList<Integer> we2ids = getWebEntityLinks(page, false);
         ArrayList<WELink> result = new ArrayList<>();
@@ -609,6 +610,7 @@ public class WebEntityPageTree implements WebEntityPageIndex {
     
     @Override
     public List<WELink> getWelinksOutbound(String page) {
+        // FIXME: what to do with internal
         int weid = getWebentity(page);
         ArrayList<Integer> we2ids = getWebEntityLinks(page, true);
         ArrayList<WELink> result = new ArrayList<>();
@@ -620,6 +622,7 @@ public class WebEntityPageTree implements WebEntityPageIndex {
     
     @Override
     public List<WELink> getWelinks(String page) {
+        // FIXME: internal counted twice
         ArrayList<WELink> result = new ArrayList<>();
         result.addAll(getWelinksInbound(page));
         result.addAll(getWelinksOutbound(page));
