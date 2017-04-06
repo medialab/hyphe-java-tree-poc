@@ -18,7 +18,7 @@ import java.util.BitSet;
  * @author jacomyma
  */
 public class LruTreeNode {
-    public static final int TREENODE_DATASIZE = 45;
+    public static final int TREENODE_DATASIZE = 49;
     public static final int TREENODE_TEXTSIZE = 2; // char = 2 bytes
     public static final int TREENODE_SIZE = TREENODE_DATASIZE + TREENODE_TEXTSIZE;
     // Offsets for the different byte zones
@@ -27,8 +27,9 @@ public class LruTreeNode {
     public static final int TREENODE_OFFSET_NEXT_SIBLING = 9; // Length 8
     public static final int TREENODE_OFFSET_CHILD = 17; // Length 8
     public static final int TREENODE_OFFSET_WEB_ENTITY_ID = 25; // Length 4
-    public static final int TREENODE_OFFSET_LINKS_OUT = 29; // Length 8
-    public static final int TREENODE_OFFSET_LINKS_IN = 37; // Length 8
+    public static final int TREENODE_OFFSET_WEB_ENTITY_CREATION_RULE_ID = 29; // Length 4
+    public static final int TREENODE_OFFSET_LINKS_OUT = 33; // Length 8
+    public static final int TREENODE_OFFSET_LINKS_IN = 41; // Length 8
     private final RandomAccessFile file;
     private long nodeid;
     private final byte[] bytes;
@@ -141,6 +142,17 @@ public class LruTreeNode {
     
     public int getWebEntity() {
         return Ints.fromByteArray(Arrays.copyOfRange(bytes, TREENODE_OFFSET_WEB_ENTITY_ID, TREENODE_OFFSET_WEB_ENTITY_ID+4));
+    }
+
+    public void setWebEntityCreationRule(int wecrid) {
+        byte[] b = Ints.toByteArray(wecrid);
+        for(int i = 0; i<4; i++) {
+            this.bytes[TREENODE_OFFSET_WEB_ENTITY_CREATION_RULE_ID+i] = b[i];
+        }
+    }
+    
+    public int getWebEntityCreationRule() {
+        return Ints.fromByteArray(Arrays.copyOfRange(bytes, TREENODE_OFFSET_WEB_ENTITY_CREATION_RULE_ID, TREENODE_OFFSET_WEB_ENTITY_CREATION_RULE_ID+4));
     }
 
     public void setOutLinks(long pointer) {

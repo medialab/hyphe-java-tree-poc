@@ -24,6 +24,8 @@ import java.util.Set;
 import java.util.Stack;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
         
@@ -65,6 +67,7 @@ public class WebEntityPageTree implements WebEntityPageIndex {
             lruTreeFile.setLength(0);
             linkTreeFile.setLength(0);
             WebEntities.getInstance().reset();
+            WebEntityCreationRules.getInstance().reset();
 
             // Create a first node
             LruTreeNode lruNode = new LruTreeNode(lruTreeFile, nextnodeid++);
@@ -599,6 +602,25 @@ public class WebEntityPageTree implements WebEntityPageIndex {
         result.addAll(getWelinksOutbound(page));
         return result;
     }
+    
+    @Override
+    public void addWecreationrule(WebEntityCreationRule wecr) {
+        WebEntityCreationRules.getInstance().add(wecr);
+        WalkHistory wh;
+        try {
+            wh = add(wecr.getPrefix());
+            if (wh.nodeid < 0 || !wh.success) {
+                throw new java.lang.RuntimeException(
+                    "Web Entity Creation Rule's prefix '" + wecr.getPrefix() + "' could not be found in the tree"
+                );
+            }
+            LruTreeNode lruNode = new LruTreeNode(lruTreeFile, wh.nodeid);
+            lruNode.setWebEntityCreationRule(wecr.getId());
+            lruNode.write();
+        } catch (IOException ex) {
+            Logger.getLogger(WebEntityPageTree.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
 
     // Return LRUs of a known web entity
     private ArrayList<Integer> getWebEntityLinks(List<String> prefixes, boolean out) {
@@ -655,7 +677,7 @@ public class WebEntityPageTree implements WebEntityPageIndex {
         return result;
     }
     
-    // Add a string to the tree (period)
+    // Add a string to the tree
     private WalkHistory add(String lru) throws IOException {
         char[] chars = lru.toCharArray();
         WalkHistory wh = new WalkHistory();
@@ -696,7 +718,51 @@ public class WebEntityPageTree implements WebEntityPageIndex {
             i++;
         }
         
+        // Create web entities
+        if (wh.lastWebEntityCreationRuleId > 0 && wh.lastWebEntityCreationRuleId >= wh.lastWebEntityId) {
+            // Apply Creation Rule
+            WebEntityCreationRule wecr = WebEntityCreationRules.getInstance().get(wh.lastWebEntityCreationRuleId);
+            // TODO: apply WECR
+            
+        } else if (wh.lastWebEntityId <= 0) {
+            // TODO apply default rule
+        }
+        
         return wh;
+    }
+    
+    public WebEntity applyWebEntityCreationRule(WebEntityCreationRule rule, String lru) {
+        if(rule == null || lru == null) {
+            return null;
+        }
+        String prefix;
+        Matcher matcher = Pattern.compile(rule.getRegexp(), Pattern.CASE_INSENSITIVE).matcher(lru);
+        if(matcher.find()) {
+            prefix = matcher.group();
+            WebEntity webEntity = new WebEntity();
+            List<String> prefixes = prefixExpand(prefix);
+            prefixes.forEach(p->{
+                try {
+                    long nodeid = followLru(p).nodeid;
+                    LruTreeNode lruNode = new LruTreeNode(lruTreeFile, nodeid);
+                    lruNode.setWebEntity(webEntity.getId());
+                    lruNode.write();
+                } catch (IOException ex) {
+                    Logger.getLogger(WebEntityPageTree.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            });
+            webEntity.setPrefixes(prefixes);
+            return webEntity;
+        } else {
+            return null;
+        }
+    }
+    
+    private List<String> prefixExpand(String prefix) {
+        // TODO: generate the other prefixes
+        ArrayList<String> result = new ArrayList<>();
+        result.add(prefix);
+        return result;
     }
     
     // Add a link stub
@@ -846,6 +912,10 @@ public class WebEntityPageTree implements WebEntityPageIndex {
             if (weid > 0) {
                 wh.lastWebEntityId = weid;
                 wh.lastWebEntityPrefix = lru.substring(0, i+1);
+            }
+            int wecrid = lruNode.getWebEntityCreationRule();
+            if (wecrid > 0) {
+                wh.lastWebEntityCreationRuleId = wecrid;
             }
             
             // The char has been found.
@@ -1242,6 +1312,7 @@ public class WebEntityPageTree implements WebEntityPageIndex {
     
     private static class WalkHistory {
         public int lastWebEntityId = 0;
+        public int lastWebEntityCreationRuleId = 0;
         private String lastWebEntityPrefix;
         public long nodeid = -1;
         public boolean success = false;

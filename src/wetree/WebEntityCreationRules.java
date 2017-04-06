@@ -17,7 +17,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -30,47 +30,64 @@ public class WebEntityCreationRules {
     private static final WebEntityCreationRules INSTANCE = new WebEntityCreationRules();
     private final String wecrFileName = System.getProperty("user.dir") + File.separator + "data" + File.separator + "webentitycreationrules.json";
     private List<WebEntityCreationRule> rules = new ArrayList<>();
-    private int currentWebEntityId = 1;
+    private HashMap<Integer, WebEntityCreationRule> rulesIndex;
+    private int currentWECRId = 1;
     
     // Singleton
     private WebEntityCreationRules(){}
     public static WebEntityCreationRules getInstance() { return INSTANCE; }
     
-    public void init() {
+    public void reset() {
         rules = new ArrayList<>();
-        try {
-            read();
-        } catch (FileNotFoundException ex) {
-            Logger.getLogger(WebEntities.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        rulesIndex = new HashMap<>();
     }
-
-    public void create(String prefix, String regexp) throws IOException {
+    
+    public void create(String prefix, String regexp) {
         WebEntityCreationRule wecr = new WebEntityCreationRule();
         wecr.setPrefix(prefix);
         wecr.setRegexp(regexp);
         rules.add(wecr);
+        rulesIndex.put(wecr.getId(), wecr);
         write();
     }
     
-    private void write() throws IOException {
+    public void add(WebEntityCreationRule wecr) {
+        rules.add(wecr);
+        rulesIndex.put(wecr.getId(), wecr);
+        write();
+    }
+    
+    private void write() {
         try (Writer writer = new FileWriter(wecrFileName)) {
             Gson gson = new GsonBuilder().setPrettyPrinting().create();
             gson.toJson(rules, writer);
+        } catch (IOException ex) {
+            Logger.getLogger(WebEntityCreationRules.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
     
     public void read() throws FileNotFoundException {
+        rules = new ArrayList<>();
+        rulesIndex = new HashMap<>();
         File f = new File(wecrFileName);
         if(f.exists() && !f.isDirectory()) {
             Gson gson = new GsonBuilder().create();
             BufferedReader br = new BufferedReader(new FileReader(wecrFileName));
             Type type = new TypeToken<List<WebEntity>>(){}.getType();
             rules = gson.fromJson(br, type);
+            rules.forEach(rule->{
+                currentWECRId = Math.max(currentWECRId, rule.getId());
+                rulesIndex.put(rule.getId(), rule);
+            });
+            currentWECRId++;
         }
     }
     
     public List<WebEntityCreationRule> getAll() {
         return rules;
+    }
+    
+    public WebEntityCreationRule get(int wecrid) {
+        return rulesIndex.get(wecrid);
     }
 }
