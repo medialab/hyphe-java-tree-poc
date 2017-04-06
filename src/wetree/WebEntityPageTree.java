@@ -166,6 +166,13 @@ public class WebEntityPageTree implements WebEntityPageIndex {
             addLinkStubs(node1id, stubsReverse.get(node1id), false);
         });
 
+//        stubs.forEach((node1id, node2id)->{
+//            addLinkStub(node1id, node2id, true);
+//        });
+//        stubsReverse.forEach((node1id, node2id)->{
+//            addLinkStub(node1id, node2id, false);
+//        });
+
     }
     
     @Override

@@ -14,6 +14,6 @@ public class PLink {
     public final String targetPage;
     public PLink(String sourcePage, String targetPage) {
         this.sourcePage = sourcePage;
-        this.targetPage = sourcePage;
+        this.targetPage = targetPage;
     }
 }
