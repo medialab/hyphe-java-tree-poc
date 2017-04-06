@@ -82,12 +82,21 @@ public class WebEntityPageTree implements WebEntityPageIndex {
     public void addPage(String page) {
         try {
             // Add the lru to the lruTree
-            long nodeid = add(page).nodeid;
+            WalkHistory wh = add(page);
+            
+            // Create web entities
+            if (wh.lastWebEntityCreationRuleId > 0 && wh.lastWebEntityCreationRuleId >= wh.lastWebEntityId) {
+                // Apply Creation Rule
+                WebEntityCreationRule wecr = WebEntityCreationRules.getInstance().get(wh.lastWebEntityCreationRuleId);
+                WebEntity we = applyWebEntityCreationRule(wecr, page);
+            } else if (wh.lastWebEntityId <= 0) {
+                // TODO apply default rule
+            }
             
             // The last child has to get the ending marker.
             // It means "this branch is a string to retrieve"
             // as opposed to just traversing it as a part of a longer string
-            LruTreeNode lruNode = new LruTreeNode(lruTreeFile, nodeid);
+            LruTreeNode lruNode = new LruTreeNode(lruTreeFile, wh.nodeid);
             lruNode.setEnding(true);
             lruNode.write();
         } catch (IOException ex) {
@@ -691,10 +700,21 @@ public class WebEntityPageTree implements WebEntityPageIndex {
             // (require = get if exists, create if not)
             wh.nodeid = requireCharFromNextSiblings(wh.nodeid, charbytes);
             
+            // Update history
+            LruTreeNode lruNode = new LruTreeNode(lruTreeFile, wh.nodeid);
+            int weid = lruNode.getWebEntity();
+            if (weid > 0) {
+                wh.lastWebEntityId = weid;
+                wh.lastWebEntityPrefix = lru.substring(0, i+1);
+            }
+            int wecrid = lruNode.getWebEntityCreationRule();
+            if (wecrid > 0) {
+                wh.lastWebEntityCreationRuleId = wecrid;
+            }
+            
             i++;
             
             // Is there a child?
-            LruTreeNode lruNode = new LruTreeNode(lruTreeFile, wh.nodeid);
             long child = lruNode.getChild();
             if (child > 0 && i < chars.length) {
                 // There's a child: search him and its siblings
@@ -717,17 +737,7 @@ public class WebEntityPageTree implements WebEntityPageIndex {
             
             i++;
         }
-        
-        // Create web entities
-        if (wh.lastWebEntityCreationRuleId > 0 && wh.lastWebEntityCreationRuleId >= wh.lastWebEntityId) {
-            // Apply Creation Rule
-            WebEntityCreationRule wecr = WebEntityCreationRules.getInstance().get(wh.lastWebEntityCreationRuleId);
-            // TODO: apply WECR
-            
-        } else if (wh.lastWebEntityId <= 0) {
-            // TODO apply default rule
-        }
-        
+        wh.success = true;
         return wh;
     }
     
@@ -738,21 +748,26 @@ public class WebEntityPageTree implements WebEntityPageIndex {
         String prefix;
         Matcher matcher = Pattern.compile(rule.getRegexp(), Pattern.CASE_INSENSITIVE).matcher(lru);
         if(matcher.find()) {
-            prefix = matcher.group();
-            WebEntity webEntity = new WebEntity();
-            List<String> prefixes = prefixExpand(prefix);
-            prefixes.forEach(p->{
-                try {
-                    long nodeid = followLru(p).nodeid;
-                    LruTreeNode lruNode = new LruTreeNode(lruTreeFile, nodeid);
-                    lruNode.setWebEntity(webEntity.getId());
-                    lruNode.write();
-                } catch (IOException ex) {
-                    Logger.getLogger(WebEntityPageTree.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            });
-            webEntity.setPrefixes(prefixes);
-            return webEntity;
+            try {
+                prefix = matcher.group();
+                List<String> prefixes = prefixExpand(prefix);
+                WebEntity webEntity = WebEntities.getInstance().create(prefixes);
+                prefixes.forEach(p->{
+                    try {
+                        long nodeid = add(p).nodeid;
+                        LruTreeNode lruNode = new LruTreeNode(lruTreeFile, nodeid);
+                        lruNode.setWebEntity(webEntity.getId());
+                        lruNode.write();
+                    } catch (IOException ex) {
+                        Logger.getLogger(WebEntityPageTree.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                });
+                webEntity.setPrefixes(prefixes);
+                return webEntity;
+            } catch (IOException ex) {
+                Logger.getLogger(WebEntityPageTree.class.getName()).log(Level.SEVERE, null, ex);
+                return null;
+            }
         } else {
             return null;
         }
@@ -1257,6 +1272,14 @@ public class WebEntityPageTree implements WebEntityPageIndex {
                 System.out.print(" END");
             }
             
+            if (lruNode.getWebEntity() > 0) {
+                System.out.print(" WE#" + lruNode.getWebEntity());
+            }
+
+            if (lruNode.getWebEntityCreationRule() > 0) {
+                System.out.print(" R#" + lruNode.getWebEntityCreationRule());
+            }
+
             long child = lruNode.getChild();
             if (child > 0) {
                 LruTreeNode childLruNode = new LruTreeNode(lruTreeFile, child);

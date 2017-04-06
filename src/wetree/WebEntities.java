@@ -41,22 +41,23 @@ public class WebEntities {
         webEntitiesIndex = new HashMap<>();
     }
 
-    public void create(String[] prefixes) throws IOException {
+    public WebEntity create(List<String> prefixes) throws IOException {
         WebEntity we = new WebEntity();
         we.setId(currentWebEntityId++);
-        we.setPrefixes(Arrays.asList(prefixes));
+        we.setPrefixes(prefixes);
         webEntities.add(we);
         webEntitiesIndex.put(we.getId(), we);
         write();
         we.getPrefixes().forEach(lru->{
             WebEntityPageTree.getInstance().associatePrefixWithWebentity(lru, we.getId());
         });
+        return we;
     }
     
-    public void create(String prefix) throws IOException {
-        String[] prefixes = new String[1];
-        prefixes[0] = prefix;
-        create(prefixes);
+    public WebEntity create(String prefix) throws IOException {
+        ArrayList<String> prefixes = new ArrayList<String>(1);
+        prefixes.add(prefix);
+        return create(prefixes);
     }
     
     private void write() throws IOException {

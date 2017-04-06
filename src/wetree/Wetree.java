@@ -37,10 +37,53 @@ public class Wetree {
 //        benchmarkRandomWebEntity(wept, true);
 //        benchmarkAllWebEntities(wept, false);
 
-        foodchainBenchmark(wept);
+//        foodchainBenchmark(wept);
+        
+        lruBenchmark(wept);
         
 //        wept.log();
 
+    }
+    
+    private static void lruBenchmark(WebEntityPageTree wept) throws IOException {
+        wept.addWecreationrule(WebEntityCreationRules.getInstance().create("s:http|h:com|h:site|", WebEntityCreationRules.RULE_DOMAIN));
+        wept.addPage("s:http|h:com|h:site|p:people|p:papa|");
+        wept.addPage("s:http|h:com|h:site|p:people|p:maman|");
+        wept.addPage("s:http|h:com|h:twitter|p:users|p:papa|");
+        
+        System.out.println("\nWeb Entities:");
+        ArrayList<WebEntity> wes = (ArrayList<WebEntity>) WebEntities.getInstance().getAll();
+        wes.forEach(we->{
+            System.out.print(we.getId() + ". ");
+            we.getPrefixes().forEach(p->{
+                System.out.print(p + " ");
+            });
+            System.out.println();
+            System.out.println("   LRUs:");
+            ArrayList<String> lrus = wept.getPages(we.getId());
+            lrus.forEach(lru->{
+                System.out.println("   - " + lru);
+            });
+            System.out.println("   Links to other web entities:");
+            List<WELink> weLinks = wept.getWelinksOutbound(we.getId());
+            weLinks.forEach(weLink->{
+                System.out.println("   -> " + weLink.targetWebentityid);
+            });
+        });
+        
+        System.out.println("\nLRUs:");
+        ArrayList<String> lrus = wept._getAllLrus_SLOW();
+        lrus.forEach(lru->{
+            System.out.println(lru);
+        });
+        
+        ArrayList<String[]> links = wept._geAllLruLinks_SLOW();
+        System.out.println("\nLRU Links:");
+        links.forEach(link->{
+            System.out.println(link[0] + " -> " + link[1]);
+        });
+        
+//        wept.log();
     }
     
     private static void foodchainBenchmark(WebEntityPageTree wept) throws IOException {
@@ -191,14 +234,14 @@ public class Wetree {
         System.out.print("Creating " + webentity_count + " web entities with pages...");
         while (webentity_count-- > 0) {
             
-            String[] prefixes = new String[ThreadLocalRandom.current().nextInt(1, 8+1)];
-            for (int i=0; i<prefixes.length; i++) {
+            ArrayList<String> prefixes = new ArrayList<String>(ThreadLocalRandom.current().nextInt(1, 8+1));
+            for (int i=0; i<prefixes.size(); i++) {
                 String p = "";
                 int prefix_size = ThreadLocalRandom.current().nextInt(2, 5+1);
                 while (prefix_size-- > 0) {
                     p += stems.get(ThreadLocalRandom.current().nextInt(0, stems.size())) + "|";
                 }
-                prefixes[i] = p;
+                prefixes.add(p);
                 
                 // Pages
                 int pages_count = (int) Math.floor(Math.pow(2, ThreadLocalRandom.current().nextInt(0, 10+1)));

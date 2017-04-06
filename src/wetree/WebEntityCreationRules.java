@@ -33,6 +33,11 @@ public class WebEntityCreationRules {
     private HashMap<Integer, WebEntityCreationRule> rulesIndex;
     private int currentWECRId = 1;
     
+    public static final String RULE_DOMAIN = "(s:[a-zA-Z]+\\|(t:[0-9]+\\|)?(h:[^\\|]+\\|(h:[^\\|]+\\|)|h:(localhost|(\\d{1,3}\\.){3}\\d{1,3}|\\[[\\da-f]*:[\\da-f:]*\\])\\|))";
+    public static final String RULE_SUBDOMAIN = "(s:[a-zA-Z]+\\|(t:[0-9]+\\|)?(h:[^\\|]+\\|(h:[^\\|]+\\|)+|h:(localhost|(\\d{1,3}\\.){3}\\d{1,3}|\\[[\\da-f]*:[\\da-f:]*\\])\\|))";
+    public static final String RULE_PATH1 = "(s:[a-zA-Z]+\\|(t:[0-9]+\\|)?(h:[^\\|]+\\|(h:[^\\|]+\\|)+|h:(localhost|(\\d{1,3}\\.){3}\\d{1,3}|\\[[\\da-f]*:[\\da-f:]*\\])\\|)(p:[^\\|]+\\|){1})";
+    public static final String RULE_PATH2 = "(s:[a-zA-Z]+\\|(t:[0-9]+\\|)?(h:[^\\|]+\\|(h:[^\\|]+\\|)+|h:(localhost|(\\d{1,3}\\.){3}\\d{1,3}|\\[[\\da-f]*:[\\da-f:]*\\])\\|)(p:[^\\|]+\\|){2})";
+    
     // Singleton
     private WebEntityCreationRules(){}
     public static WebEntityCreationRules getInstance() { return INSTANCE; }
@@ -42,13 +47,15 @@ public class WebEntityCreationRules {
         rulesIndex = new HashMap<>();
     }
     
-    public void create(String prefix, String regexp) {
+    public WebEntityCreationRule create(String prefix, String regexp) {
         WebEntityCreationRule wecr = new WebEntityCreationRule();
         wecr.setPrefix(prefix);
         wecr.setRegexp(regexp);
+        wecr.setId(currentWECRId++);
         rules.add(wecr);
         rulesIndex.put(wecr.getId(), wecr);
         write();
+        return wecr;
     }
     
     public void add(WebEntityCreationRule wecr) {
