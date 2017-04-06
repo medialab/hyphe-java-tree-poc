@@ -6,8 +6,10 @@
 package wetree;
 
 import com.mongodb.client.MongoCursor;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -243,19 +245,36 @@ public class Wetree {
         // Instantiating and resetting DB files
         WebEntityPageTree wept;
         wept = WebEntityPageTree.getInstance();
-
-        wept.reset();
+        try {
+            wept.init(true);
+        } catch (FileNotFoundException ex) {
+            Logger.getLogger(Wetree.class.getName()).log(Level.SEVERE, null, ex);
+        }
 
         // Creating a mongo cursor
         MongoConnector connector = new MongoConnector();
         MongoCursor<Document> cursor = connector.getPagesCursor();
 
+        int i = 0;
         while (cursor.hasNext()) {
             Document doc = cursor.next();
             String lru = doc.getString("lru");
 
             // First we need to add the page's lru
             wept.addPage(lru);
+
+            // Second we need to add the page's lrulinks
+            List<String> lrulinks = (List<String>) doc.get("lrulinks");
+            System.out.println((i++) + " (" + lrulinks.size() + ") " + lru);
+
+            lrulinks.forEach(lrulink->{
+              wept.addPage(lrulink);
+                try {
+                    wept.addLink(lru, lrulink);
+                } catch (IOException ex) {
+                    Logger.getLogger(Wetree.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            });
         }
     }
 }
