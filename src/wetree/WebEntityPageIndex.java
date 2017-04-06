@@ -29,9 +29,9 @@ public interface WebEntityPageIndex {
     public List<PLink> getPlinks(String page);
     public List<PLink> getPlinksInbound(String page);
     public List<PLink> getPlinksOutbound(String page);
-//    public List<WELink> getWelinks(String page);
-//    public List<WELink> getWelinksInbound(String page);
-//    public List<WELink> getWelinksOutbound(String page);
+    public List<WELink> getWelinks(String page);
+    public List<WELink> getWelinksInbound(String page);
+    public List<WELink> getWelinksOutbound(String page);
 //    public List<int> getWebEntityParent(int weid);
 //    public List<int> getWebEntityChild(int weid);
 //    public int getPageDegree(String page);

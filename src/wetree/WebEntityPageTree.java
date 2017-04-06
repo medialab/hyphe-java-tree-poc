@@ -560,6 +560,36 @@ public class WebEntityPageTree implements WebEntityPageIndex {
         return result;
     }
     
+    @Override
+    public List<WELink> getWelinksInbound(String page) {
+        int weid = getWebentity(page);
+        ArrayList<Integer> we2ids = getWebEntityLinks(page, false);
+        ArrayList<WELink> result = new ArrayList<>();
+        we2ids.forEach(we2id->{
+            result.add(new WELink(weid, we2id));
+        });
+        return result;
+    }
+    
+    @Override
+    public List<WELink> getWelinksOutbound(String page) {
+        int weid = getWebentity(page);
+        ArrayList<Integer> we2ids = getWebEntityLinks(page, true);
+        ArrayList<WELink> result = new ArrayList<>();
+        we2ids.forEach(we2id->{
+            result.add(new WELink(weid, we2id));
+        });
+        return result;
+    }
+    
+    @Override
+    public List<WELink> getWelinks(String page) {
+        ArrayList<WELink> result = new ArrayList<>();
+        result.addAll(getWelinksInbound(page));
+        result.addAll(getWelinksOutbound(page));
+        return result;
+    }
+
     // Return LRUs of a known web entity
     private ArrayList<Integer> getWebEntityLinks(List<String> prefixes, boolean out) {
         ArrayList<Integer> result = new ArrayList<>();
