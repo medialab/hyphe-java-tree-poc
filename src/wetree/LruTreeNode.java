@@ -186,7 +186,7 @@ public class LruTreeNode {
         }
     }
     
-    public long getIndegree() {
+    public int getIndegree() {
         return Ints.fromByteArray(Arrays.copyOfRange(bytes, TREENODE_OFFSET_INDEGREE, TREENODE_OFFSET_INDEGREE+4));
     }
         
@@ -197,7 +197,7 @@ public class LruTreeNode {
         }
     }
     
-    public long getOutdegree() {
+    public int getOutdegree() {
         return Ints.fromByteArray(Arrays.copyOfRange(bytes, TREENODE_OFFSET_OUTDEGREE, TREENODE_OFFSET_OUTDEGREE+4));
     }
         

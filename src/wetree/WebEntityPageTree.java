@@ -863,8 +863,11 @@ public class WebEntityPageTree implements WebEntityPageIndex {
                 } else {
                     lruNode.setInLinks(nextlinkid);
                 }
-                lruNode.write();
             }
+            // Update degree
+            if (direction) lruNode.setOutdegree(lruNode.getOutdegree() + 1);
+            else lruNode.setIndegree(lruNode.getIndegree() + 1);
+            lruNode.write();
             // Create the stub
             LinkTreeNode linkNode = new LinkTreeNode(linkTreeFile, nextlinkid);
             linkNode.setLru(node2id);
@@ -897,8 +900,11 @@ public class WebEntityPageTree implements WebEntityPageIndex {
                 } else {
                     lruNode.setInLinks(nextlinkid);
                 }
-                lruNode.write();
             }
+            // Update degree
+            if (direction) lruNode.setOutdegree(lruNode.getOutdegree() + node2ids.size());
+            else lruNode.setIndegree(lruNode.getIndegree() + node2ids.size());
+            lruNode.write();
             Iterator it = node2ids.iterator();
             while (it.hasNext()) {
                 long node2id = (Long) it.next();
