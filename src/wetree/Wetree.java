@@ -88,28 +88,21 @@ public class Wetree {
         System.out.println("\nWeb Entities:");
         ArrayList<WebEntity> wes = (ArrayList<WebEntity>) WebEntities.getInstance().getAll();
         wes.forEach(we->{
-            try {
-                System.out.print(we.getId() + ". ");
-                we.getPrefixes().forEach(p->{
-                    System.out.print(p + " ");
-                });
-                System.out.println();
-                
-                System.out.println("   LRUs:");
-                ArrayList<String> lrus = wept.getPages(we.getId());
-                lrus.forEach(lru->{
-                    System.out.println("   - " + lru);
-                });
-                
-                System.out.println("   Links to other web entities:");
-                ArrayList<Integer> weids = wept.getWebEntityOutLinks(we.getPrefixes());
-                weids.forEach(weid->{
-                    System.out.println("   -> " + weid);
-                });
-                
-            } catch (IOException ex) {
-                Logger.getLogger(Wetree.class.getName()).log(Level.SEVERE, null, ex);
-            }
+            System.out.print(we.getId() + ". ");
+            we.getPrefixes().forEach(p->{
+                System.out.print(p + " ");
+            });
+            System.out.println();
+            System.out.println("   LRUs:");
+            ArrayList<String> lrus = wept.getPages(we.getId());
+            lrus.forEach(lru->{
+                System.out.println("   - " + lru);
+            });
+            System.out.println("   Links to other web entities:");
+            List<WELink> weLinks = wept.getWelinksOutbound(we.getId());
+            weLinks.forEach(weLink->{
+                System.out.println("   -> " + weLink.targetWebentityid);
+            });
         });
         
         ArrayList<String[]> links = wept._geAllLruLinks_SLOW();
@@ -137,32 +130,25 @@ public class Wetree {
     }
     
     private static void benchmarkWebEntity(WebEntityPageTree wept, WebEntity we, boolean display) throws IOException {
-        try {
-            if (display) {
-                System.out.print(we.getId() + ". ");
-                we.getPrefixes().forEach(p->{
-                    System.out.print(p + " ");
-                });
-                System.out.println();
-            }
-
-            if (display) System.out.println("   LRUs:");
-            ArrayList<String> lrus = wept.getPages(we.getId());
-            if (display) lrus.forEach(lru->{
-                System.out.println("   - " + lru);
+        if (display) {
+            System.out.print(we.getId() + ". ");
+            we.getPrefixes().forEach(p->{
+                System.out.print(p + " ");
             });
-
-            if (display) System.out.println("   Links to other web entities:");
-            ArrayList<Integer> weids = wept.getWebEntityOutLinks(we.getPrefixes());
-            if (display) weids.forEach(weid->{
-                System.out.println("   -> " + weid);
-            });
-            
-            if (!display) {
-                System.out.println("Web Entity " + we.getId() + ": retrieved " + lrus.size() + " LRUs and links to " + weids.size() + " web entities");
-            }
-        } catch (IOException ex) {
-            Logger.getLogger(Wetree.class.getName()).log(Level.SEVERE, null, ex);
+            System.out.println();
+        }
+        if (display) System.out.println("   LRUs:");
+        ArrayList<String> lrus = wept.getPages(we.getId());
+        if (display) lrus.forEach(lru->{
+            System.out.println("   - " + lru);
+        });
+        if (display) System.out.println("   Links to other web entities:");
+        List<WELink> weLinks = wept.getWelinksOutbound(we.getId());
+        if (display) weLinks.forEach(weLink->{
+            System.out.println("   -> " + weLink.targetWebentityid);
+        });
+        if (!display) {
+            System.out.println("Web Entity " + we.getId() + ": retrieved " + lrus.size() + " LRUs and links to " + weLinks.size() + " web entities");
         }
     }
 

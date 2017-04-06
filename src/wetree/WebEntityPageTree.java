@@ -530,8 +530,18 @@ public class WebEntityPageTree implements WebEntityPageIndex {
         return result;
     }
     
+    public List<WELink> getWelinksOutbound(int weid) {
+        WebEntity we = WebEntities.getInstance().get(weid);
+        ArrayList<Integer> we2ids = getWebEntityOutLinks(we.getPrefixes());
+        ArrayList<WELink> result = new ArrayList<>();
+        we2ids.forEach(we2id->{
+            result.add(new WELink(weid, we2id));
+        });
+        return result;
+    }
+    
     // Return LRUs of a known web entity
-    public ArrayList<Integer> getWebEntityOutLinks(List<String> prefixes) throws IOException {
+    private ArrayList<Integer> getWebEntityOutLinks(List<String> prefixes) {
         HashMap<Integer, Integer> weidMap = new HashMap<>();
         prefixes.forEach(lru->{
             WalkHistory wh;
@@ -546,7 +556,6 @@ public class WebEntityPageTree implements WebEntityPageIndex {
                     nodeids.forEach(nid->{
                         try {
                             LruTreeNode lruNode = new LruTreeNode(lruTreeFile, nid);
-                            // TODO: follow the links
                             long outLinks = lruNode.getOutLinks();
                             if (outLinks > 0) {
                                 LinkTreeNode linkNode = new LinkTreeNode(linkTreeFile, outLinks);

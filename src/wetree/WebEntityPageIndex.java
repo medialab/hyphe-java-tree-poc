@@ -39,7 +39,7 @@ public interface WebEntityPageIndex {
 //    public int getPageOutdegree(String page);
 //    public List<WELink> getWelinks(int weid);
 //    public List<WELink> getWelinksInbound(int weid);
-//    public List<WELink> getWelinksOutbound(int weid);
+    public List<WELink> getWelinksOutbound(int weid);
 //    public List<PLink> getPlinksInternal(int weid);
 //    public List<PLink> getPlinksInbound(int weid);
 //    public List<PLink> getPlinksOutbound(int weid);
