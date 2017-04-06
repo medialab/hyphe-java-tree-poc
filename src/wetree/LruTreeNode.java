@@ -18,7 +18,7 @@ import java.util.BitSet;
  * @author jacomyma
  */
 public class LruTreeNode {
-    public static final int TREENODE_DATASIZE = 49;
+    public static final int TREENODE_DATASIZE = 57;
     public static final int TREENODE_TEXTSIZE = 2; // char = 2 bytes
     public static final int TREENODE_SIZE = TREENODE_DATASIZE + TREENODE_TEXTSIZE;
     // Offsets for the different byte zones
@@ -30,6 +30,8 @@ public class LruTreeNode {
     public static final int TREENODE_OFFSET_WEB_ENTITY_CREATION_RULE_ID = 29; // Length 4
     public static final int TREENODE_OFFSET_LINKS_OUT = 33; // Length 8
     public static final int TREENODE_OFFSET_LINKS_IN = 41; // Length 8
+    public static final int TREENODE_OFFSET_INDEGREE = 49; // Length 4
+    public static final int TREENODE_OFFSET_OUTDEGREE = 53; // Length 4
     private final RandomAccessFile file;
     private long nodeid;
     private final byte[] bytes;
@@ -175,6 +177,28 @@ public class LruTreeNode {
     
     public long getInLinks() {
         return Longs.fromByteArray(Arrays.copyOfRange(bytes, TREENODE_OFFSET_LINKS_IN, TREENODE_OFFSET_LINKS_IN+8));
+    }
+        
+    public void setIndegree(int indegree) {
+        byte[] b = Ints.toByteArray(indegree);
+        for(int i = 0; i<4; i++) {
+            this.bytes[TREENODE_OFFSET_INDEGREE+i] = b[i];
+        }
+    }
+    
+    public long getIndegree() {
+        return Ints.fromByteArray(Arrays.copyOfRange(bytes, TREENODE_OFFSET_INDEGREE, TREENODE_OFFSET_INDEGREE+4));
+    }
+        
+    public void setOutdegree(int outdegree) {
+        byte[] b = Ints.toByteArray(outdegree);
+        for(int i = 0; i<4; i++) {
+            this.bytes[TREENODE_OFFSET_OUTDEGREE+i] = b[i];
+        }
+    }
+    
+    public long getOutdegree() {
+        return Ints.fromByteArray(Arrays.copyOfRange(bytes, TREENODE_OFFSET_OUTDEGREE, TREENODE_OFFSET_OUTDEGREE+4));
     }
         
     public BitSet getFlags() {
