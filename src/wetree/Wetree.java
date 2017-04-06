@@ -28,6 +28,7 @@ public class Wetree {
     public static void main(String[] args) throws IOException {
         WebEntityPageTree wept;
         wept = WebEntityPageTree.getInstance();
+        wept.setDefaultWecreationrule(WebEntityCreationRules.RULE_DOMAIN);
         
         boolean reset = true;
         wept.init(reset);
@@ -46,10 +47,15 @@ public class Wetree {
     }
     
     private static void lruBenchmark(WebEntityPageTree wept) throws IOException {
-        wept.addWecreationrule(WebEntityCreationRules.getInstance().create("s:http|h:com|h:site|", WebEntityCreationRules.RULE_DOMAIN));
+        wept.addWecreationrule(WebEntityCreationRules.getInstance().create("s:http|h:com|h:twitter|", WebEntityCreationRules.RULE_PATH1));
         wept.addPage("s:http|h:com|h:site|p:people|p:papa|");
         wept.addPage("s:http|h:com|h:site|p:people|p:maman|");
-        wept.addPage("s:http|h:com|h:twitter|p:users|p:papa|");
+        wept.addPage("s:http|h:com|h:site|h:www|");
+
+        wept.addPage("s:http|h:com|h:twitter|p:papa|");
+        wept.addPage("s:http|h:com|h:twitter|p:pépé|");
+        wept.addPage("s:http|h:com|h:twitter|p:pépé|today|");
+        wept.addPage("s:http|h:com|h:twitter|p:pépé|yesterday|");
         
         System.out.println("\nWeb Entities:");
         ArrayList<WebEntity> wes = (ArrayList<WebEntity>) WebEntities.getInstance().getAll();

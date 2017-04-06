@@ -36,6 +36,7 @@ import java.util.regex.Pattern;
 public class WebEntityPageTree implements WebEntityPageIndex {
     private static final WebEntityPageTree INSTANCE = new WebEntityPageTree();
     private final String rootPath = System.getProperty("user.dir") + File.separator + "data" + File.separator;
+    private String defaultWECreationRule;
     private RandomAccessFile lruTreeFile;
     private RandomAccessFile linkTreeFile;
     private long nextnodeid = 1;
@@ -86,11 +87,12 @@ public class WebEntityPageTree implements WebEntityPageIndex {
             
             // Create web entities
             if (wh.lastWebEntityCreationRuleId > 0 && wh.lastWebEntityCreationRuleId >= wh.lastWebEntityId) {
+                System.out.println("Add web entity for lru " + page);
                 // Apply Creation Rule
                 WebEntityCreationRule wecr = WebEntityCreationRules.getInstance().get(wh.lastWebEntityCreationRuleId);
                 WebEntity we = applyWebEntityCreationRule(wecr, page);
             } else if (wh.lastWebEntityId <= 0) {
-                // TODO apply default rule
+                WebEntity we = applyDefaultWebEntityCreationRule(page);
             }
             
             // The last child has to get the ending marker.
@@ -739,6 +741,39 @@ public class WebEntityPageTree implements WebEntityPageIndex {
         }
         wh.success = true;
         return wh;
+    }
+    
+    public void setDefaultWecreationrule(String regex) {
+        this.defaultWECreationRule = regex;
+    }
+    
+    public WebEntity applyDefaultWebEntityCreationRule(String lru) {
+        String prefix;
+        Matcher matcher = Pattern.compile(this.defaultWECreationRule, Pattern.CASE_INSENSITIVE).matcher(lru);
+        if(matcher.find()) {
+            try {
+                prefix = matcher.group();
+                List<String> prefixes = prefixExpand(prefix);
+                WebEntity webEntity = WebEntities.getInstance().create(prefixes);
+                prefixes.forEach(p->{
+                    try {
+                        long nodeid = add(p).nodeid;
+                        LruTreeNode lruNode = new LruTreeNode(lruTreeFile, nodeid);
+                        lruNode.setWebEntity(webEntity.getId());
+                        lruNode.write();
+                    } catch (IOException ex) {
+                        Logger.getLogger(WebEntityPageTree.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                });
+                webEntity.setPrefixes(prefixes);
+                return webEntity;
+            } catch (IOException ex) {
+                Logger.getLogger(WebEntityPageTree.class.getName()).log(Level.SEVERE, null, ex);
+                return null;
+            }
+        } else {
+            return null;
+        }
     }
     
     public WebEntity applyWebEntityCreationRule(WebEntityCreationRule rule, String lru) {

@@ -47,7 +47,7 @@ public interface WebEntityPageIndex {
     public void addWecreationrule(WebEntityCreationRule wecr);
 //    public void removeWecreationrule(WebEntityCreationRule wecr);
 //    public List<WebEntityCreationRule> getWecreationrules();
-//    public void setDefaultWecreationrule(/* to define */);
+    public void setDefaultWecreationrule(String regex);
 //    public String getPrefixFromWecreationrule(WebEntityCreationRule wecr, String lru);
     public List<WELink> getWelinks();
 //    public List<String> slow_getPages();
