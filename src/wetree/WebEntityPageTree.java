@@ -553,6 +553,16 @@ public class WebEntityPageTree implements WebEntityPageIndex {
     }
     
     @Override
+    public List<WELink> getWelinks() {
+        ArrayList<WELink> result = new ArrayList<>();
+        List<WebEntity> webEntities = getWebentities();
+        webEntities.forEach(we->{
+            result.addAll(getWelinksOutbound(we.getId()));
+        });
+        return result;
+    }
+    
+    @Override
     public List<WELink> getWelinks(int weid) {
         ArrayList<WELink> result = new ArrayList<>();
         result.addAll(getWelinksInbound(weid));
@@ -776,6 +786,11 @@ public class WebEntityPageTree implements WebEntityPageIndex {
             Logger.getLogger(WebEntityPageTree.class.getName()).log(Level.SEVERE, null, ex);
         }
         return "";
+    }
+    
+    @Override
+    public List<WebEntity> getWebentities() {
+        return WebEntities.getInstance().getAll();
     }
     
     @Override

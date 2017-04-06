@@ -21,6 +21,7 @@ public interface WebEntityPageIndex {
 //    public List<String> getPages(String prefix, QueryParameters params);
 //    public List<String> getPages(int weid, QueryParameters params);
     public String getPrefix(String lru);
+    public List<WebEntity> getWebentities();
     public int getWebentity(String lru);
     public int getWebentity_fromPrefix(String prefix);
     public void addPlink(String sourcePage, String targetPage);
@@ -48,7 +49,7 @@ public interface WebEntityPageIndex {
 //    public List<WebEntityCreationRule> getWecreationrules();
 //    public void setDefaultWecreationrule(/* to define */);
 //    public String getPrefixFromWecreationrule(WebEntityCreationRule wecr, String lru);
-//    public List<WELink> getWelinks();
+    public List<WELink> getWelinks();
 //    public List<String> slow_getPages();
 //    public List<int> slow_getWebentities();
 //    public List<PLink> slow_getPlinks();
