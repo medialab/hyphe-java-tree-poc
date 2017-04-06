@@ -624,6 +624,10 @@ public class WebEntityPageTree implements WebEntityPageIndex {
                 try {
                     long prefixid = followLru(prefix).nodeid;
                     walkWebEntityForLruNodeIds(prefixid).forEach(node1id->{
+                        if (!nodeidToWeid.containsKey(node1id)) {
+                            nodeidToWeid.put(node1id, we1id);
+                        }
+
                         try {
                             LruTreeNode lru1Node = new LruTreeNode(lruTreeFile, node1id);
                             long outlinks = lru1Node.getOutLinks();
