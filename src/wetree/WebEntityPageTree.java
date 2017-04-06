@@ -533,7 +533,7 @@ public class WebEntityPageTree implements WebEntityPageIndex {
     @Override
     public List<WELink> getWelinksInbound(int weid) {
         WebEntity we = WebEntities.getInstance().get(weid);
-        ArrayList<Integer> we2ids = getWebEntityInOutLinks(we.getPrefixes(), false);
+        ArrayList<Integer> we2ids = getWebEntityLinks(we.getPrefixes(), false);
         ArrayList<WELink> result = new ArrayList<>();
         we2ids.forEach(we2id->{
             result.add(new WELink(weid, we2id));
@@ -544,7 +544,7 @@ public class WebEntityPageTree implements WebEntityPageIndex {
      @Override
     public List<WELink> getWelinksOutbound(int weid) {
         WebEntity we = WebEntities.getInstance().get(weid);
-        ArrayList<Integer> we2ids = getWebEntityInOutLinks(we.getPrefixes(), true);
+        ArrayList<Integer> we2ids = getWebEntityLinks(we.getPrefixes(), true);
         ArrayList<WELink> result = new ArrayList<>();
         we2ids.forEach(we2id->{
             result.add(new WELink(weid, we2id));
@@ -561,53 +561,58 @@ public class WebEntityPageTree implements WebEntityPageIndex {
     }
     
     // Return LRUs of a known web entity
-    private ArrayList<Integer> getWebEntityInOutLinks(List<String> prefixes, boolean out) {
-        HashMap<Integer, Integer> weidMap = new HashMap<>();
+    private ArrayList<Integer> getWebEntityLinks(List<String> prefixes, boolean out) {
+        ArrayList<Integer> result = new ArrayList<>();
         prefixes.forEach(lru->{
-            WalkHistory wh;
-            try {
-                wh = followLru(lru);
-                if (!wh.success) {
-                    throw new java.lang.RuntimeException(
-                        "Prefix '" + lru + "' could not be found in the tree"
-                    );
-                } else {
-                    ArrayList<Long> nodeids = walkWebEntityForLruNodeIds(wh.nodeid);
-                    nodeids.forEach(nid->{
-                        try {
-                            LruTreeNode lruNode = new LruTreeNode(lruTreeFile, nid);
-                            long links = out ? lruNode.getOutLinks() : lruNode.getInLinks();
-                            if (links > 0) {
-                                LinkTreeNode linkNode = new LinkTreeNode(linkTreeFile, links);
-                                
-                                int we2id = windupLruForWebEntityId(linkNode.getLru());
-                                weidMap.put(we2id, weidMap.getOrDefault(we2id, 0));
-                                
-                                long next = linkNode.getNext();
-                                while(next > 0) {
-                                    linkNode.read(next);
-                                    
-                                    we2id = windupLruForWebEntityId(linkNode.getLru());
-                                    weidMap.put(we2id, weidMap.getOrDefault(we2id, 0));
-                                
-                                    next = linkNode.getNext();
-                                }
-                            }
-                            
-                            
-                        } catch (IOException ex) {
-                            Logger.getLogger(WebEntityPageTree.class.getName()).log(Level.SEVERE, null, ex);
-                        }
-                    });
-                }
-            } catch (IOException ex) {
-                Logger.getLogger(WebEntityPageTree.class.getName()).log(Level.SEVERE, null, ex);
-            }
+            result.addAll(getWebEntityLinks(lru, out));
         });
+        return result;
+    }
+    
+    private ArrayList<Integer> getWebEntityLinks(String lru, boolean out) {
+        HashMap<Integer, Integer> weidMap = new HashMap<>();
+        WalkHistory wh;
+        try {
+            wh = followLru(lru);
+            if (!wh.success) {
+                throw new java.lang.RuntimeException(
+                    "Prefix '" + lru + "' could not be found in the tree"
+                );
+            } else {
+                ArrayList<Long> nodeids = walkWebEntityForLruNodeIds(wh.nodeid);
+                nodeids.forEach(nid->{
+                    try {
+                        LruTreeNode lruNode = new LruTreeNode(lruTreeFile, nid);
+                        long links = out ? lruNode.getOutLinks() : lruNode.getInLinks();
+                        if (links > 0) {
+                            LinkTreeNode linkNode = new LinkTreeNode(linkTreeFile, links);
+
+                            int we2id = windupLruForWebEntityId(linkNode.getLru());
+                            weidMap.put(we2id, weidMap.getOrDefault(we2id, 0));
+
+                            long next = linkNode.getNext();
+                            while(next > 0) {
+                                linkNode.read(next);
+
+                                we2id = windupLruForWebEntityId(linkNode.getLru());
+                                weidMap.put(we2id, weidMap.getOrDefault(we2id, 0));
+
+                                next = linkNode.getNext();
+                            }
+                        }
+
+
+                    } catch (IOException ex) {
+                        Logger.getLogger(WebEntityPageTree.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                });
+            }
+        } catch (IOException ex) {
+            Logger.getLogger(WebEntityPageTree.class.getName()).log(Level.SEVERE, null, ex);
+        }
         ArrayList<Integer> result = new ArrayList<>();
         weidMap.keySet().forEach(weid->{ result.add(weid);});
         return result;
-                
     }
     
     // Add a string to the tree (period)
