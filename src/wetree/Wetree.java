@@ -269,14 +269,13 @@ public class Wetree {
             List<String> lrulinks = (List<String>) doc.get("lrulinks");
             System.out.println((i++) + " (" + lrulinks.size() + ") " + lru);
 
-            lrulinks.forEach(lrulink->{
-              wept.addPage(lrulink);
-                try {
-                    wept.addLink(lru, lrulink);
-                } catch (IOException ex) {
-                    Logger.getLogger(Wetree.class.getName()).log(Level.SEVERE, null, ex);
-                }
+            ArrayList<PLink> plinks = new ArrayList<>();
+
+            lrulinks.forEach((String lrulink)->{
+               plinks.add(new PLink(lru, lrulink));
             });
+
+            wept.addPlinks(plinks);
         }
     }
 }
