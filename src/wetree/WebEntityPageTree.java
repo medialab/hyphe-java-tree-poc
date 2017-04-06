@@ -530,9 +530,10 @@ public class WebEntityPageTree implements WebEntityPageIndex {
         return result;
     }
     
-    public List<WELink> getWelinksOutbound(int weid) {
+    @Override
+    public List<WELink> getWelinksInbound(int weid) {
         WebEntity we = WebEntities.getInstance().get(weid);
-        ArrayList<Integer> we2ids = getWebEntityOutLinks(we.getPrefixes());
+        ArrayList<Integer> we2ids = getWebEntityInOutLinks(we.getPrefixes(), false);
         ArrayList<WELink> result = new ArrayList<>();
         we2ids.forEach(we2id->{
             result.add(new WELink(weid, we2id));
@@ -540,8 +541,27 @@ public class WebEntityPageTree implements WebEntityPageIndex {
         return result;
     }
     
+     @Override
+    public List<WELink> getWelinksOutbound(int weid) {
+        WebEntity we = WebEntities.getInstance().get(weid);
+        ArrayList<Integer> we2ids = getWebEntityInOutLinks(we.getPrefixes(), true);
+        ArrayList<WELink> result = new ArrayList<>();
+        we2ids.forEach(we2id->{
+            result.add(new WELink(weid, we2id));
+        });
+        return result;
+    }
+    
+    @Override
+    public List<WELink> getWelinks(int weid) {
+        ArrayList<WELink> result = new ArrayList<>();
+        result.addAll(getWelinksInbound(weid));
+        result.addAll(getWelinksOutbound(weid));
+        return result;
+    }
+    
     // Return LRUs of a known web entity
-    private ArrayList<Integer> getWebEntityOutLinks(List<String> prefixes) {
+    private ArrayList<Integer> getWebEntityInOutLinks(List<String> prefixes, boolean out) {
         HashMap<Integer, Integer> weidMap = new HashMap<>();
         prefixes.forEach(lru->{
             WalkHistory wh;
@@ -556,19 +576,19 @@ public class WebEntityPageTree implements WebEntityPageIndex {
                     nodeids.forEach(nid->{
                         try {
                             LruTreeNode lruNode = new LruTreeNode(lruTreeFile, nid);
-                            long outLinks = lruNode.getOutLinks();
-                            if (outLinks > 0) {
-                                LinkTreeNode linkNode = new LinkTreeNode(linkTreeFile, outLinks);
+                            long links = out ? lruNode.getOutLinks() : lruNode.getInLinks();
+                            if (links > 0) {
+                                LinkTreeNode linkNode = new LinkTreeNode(linkTreeFile, links);
                                 
-                                int targetweid = windupLruForWebEntityId(linkNode.getLru());
-                                weidMap.put(targetweid, weidMap.getOrDefault(targetweid, 0));
+                                int we2id = windupLruForWebEntityId(linkNode.getLru());
+                                weidMap.put(we2id, weidMap.getOrDefault(we2id, 0));
                                 
                                 long next = linkNode.getNext();
                                 while(next > 0) {
                                     linkNode.read(next);
                                     
-                                    targetweid = windupLruForWebEntityId(linkNode.getLru());
-                                    weidMap.put(targetweid, weidMap.getOrDefault(targetweid, 0));
+                                    we2id = windupLruForWebEntityId(linkNode.getLru());
+                                    weidMap.put(we2id, weidMap.getOrDefault(we2id, 0));
                                 
                                     next = linkNode.getNext();
                                 }
