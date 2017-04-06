@@ -105,7 +105,7 @@ public class WebEntityPageTree implements WebEntityPageIndex {
     public void addPlink(PLink pLink) {
         addPlink(pLink.sourcePage, pLink.targetPage);
     }
-
+    
     @Override
     public void addPlink(String sourcePage, String targetPage) {
         try {
@@ -118,7 +118,7 @@ public class WebEntityPageTree implements WebEntityPageIndex {
             }
             if (targetnodeid < 0) {
                 throw new java.lang.RuntimeException(
-                        "Link add issue: " + sourcePage + " could not be found in the tree"
+                        "Link add issue: " + targetPage + " could not be found in the tree"
                 );
             }
             addLinkStub(sourcenodeid, targetnodeid, true);
@@ -126,6 +126,30 @@ public class WebEntityPageTree implements WebEntityPageIndex {
         } catch (IOException ex) {
             Logger.getLogger(WebEntityPageTree.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+    
+    @Override
+    public void addPlinks(List<PLink> pLinks) {
+        pLinks.forEach(pLink->{
+            try {
+                long sourcenodeid = add(pLink.sourcePage).nodeid;
+                long targetnodeid = add(pLink.targetPage).nodeid;
+                if (sourcenodeid < 0) {
+                    throw new java.lang.RuntimeException(
+                            "Link add issue: " + pLink.sourcePage + " could not be found in the tree"
+                    );
+                }
+                if (targetnodeid < 0) {
+                    throw new java.lang.RuntimeException(
+                            "Link add issue: " + pLink.targetPage + " could not be found in the tree"
+                    );
+                }
+                addLinkStub(sourcenodeid, targetnodeid, true);
+                addLinkStub(targetnodeid, sourcenodeid, false);
+            } catch (IOException ex) {
+                Logger.getLogger(WebEntityPageTree.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        });
     }
     
     @Override
@@ -571,37 +595,81 @@ public class WebEntityPageTree implements WebEntityPageIndex {
     }
     
     // Add a link stub
-    private void addLinkStub(long node1id, long node2id, boolean direction) throws IOException {
-        LruTreeNode lruNode = new LruTreeNode(lruTreeFile, node1id);
-        long linksPointer = direction ? lruNode.getOutLinks() : lruNode.getInLinks();
-        if (linksPointer > 0) {
-            LinkTreeNode existingLinkNode = new LinkTreeNode(linkTreeFile, linksPointer);
-            long next = existingLinkNode.getNext();
-            while(next > 0) {
-                existingLinkNode.read(next);
-                next = existingLinkNode.getNext();
-            }
-            // Register the stub
-            existingLinkNode.setNext(nextlinkid);
-            existingLinkNode.write();
-        } else {
-            // Register the stub
-            if (direction) {
-                lruNode.setOutLinks(nextlinkid);
+    private void addLinkStub(long node1id, long node2id, boolean direction) {
+        try {
+            LruTreeNode lruNode = new LruTreeNode(lruTreeFile, node1id);
+            long linksPointer = direction ? lruNode.getOutLinks() : lruNode.getInLinks();
+            if (linksPointer > 0) {
+                LinkTreeNode existingLinkNode = new LinkTreeNode(linkTreeFile, linksPointer);
+                long next = existingLinkNode.getNext();
+                while(next > 0) {
+                    existingLinkNode.read(next);
+                    next = existingLinkNode.getNext();
+                }
+                // Register the stub
+                existingLinkNode.setNext(nextlinkid);
+                existingLinkNode.write();
             } else {
-                lruNode.setInLinks(nextlinkid);
+                // Register the stub
+                if (direction) {
+                    lruNode.setOutLinks(nextlinkid);
+                } else {
+                    lruNode.setInLinks(nextlinkid);
+                }
+                lruNode.write();
             }
-            lruNode.write();
+            // Create the stub
+            LinkTreeNode linkNode = new LinkTreeNode(linkTreeFile, nextlinkid);
+            linkNode.setLru(node2id);
+            linkNode.write();
+            nextlinkid++;
+        } catch (IOException ex) {
+            Logger.getLogger(WebEntityPageTree.class.getName()).log(Level.SEVERE, null, ex);
         }
-        // Create the stub
-        LinkTreeNode linkNode = new LinkTreeNode(linkTreeFile, nextlinkid);
-        linkNode.setLru(node2id);
-        linkNode.write();
-        nextlinkid++;
     }
     
     // Add a batch of link stubs
-    private void addLinkStubs(long node1id, List<Long> node2ids, boolean direction) throws IOException {
+    private void addLinkStubs(long node1id, List<Long> node2ids, boolean direction) {
+        try {
+            LruTreeNode lruNode = new LruTreeNode(lruTreeFile, node1id);
+            long linksPointer = direction ? lruNode.getOutLinks() : lruNode.getInLinks();
+            if (linksPointer > 0) {
+                LinkTreeNode existingLinkNode = new LinkTreeNode(linkTreeFile, linksPointer);
+                long next = existingLinkNode.getNext();
+                while(next > 0) {
+                    existingLinkNode.read(next);
+                    next = existingLinkNode.getNext();
+                }
+                // Register the stub
+                existingLinkNode.setNext(nextlinkid);
+                existingLinkNode.write();
+            } else {
+                // Register the stub
+                if (direction) {
+                    lruNode.setOutLinks(nextlinkid);
+                } else {
+                    lruNode.setInLinks(nextlinkid);
+                }
+                lruNode.write();
+            }
+            int size = node2ids.size();
+            for (int i=0; i < size; i++) {
+                long node2id = node2ids.get(i);
+                
+                // Create the stub
+                LinkTreeNode linkNode = new LinkTreeNode(linkTreeFile, nextlinkid);
+                linkNode.setLru(node2id);
+                // If not last, register the next
+                if (i < size-1) {
+                    linkNode.setNext(nextlinkid+1);
+                }
+                linkNode.write();
+                nextlinkid++;
+                
+            }
+        } catch (IOException ex) {
+            Logger.getLogger(WebEntityPageTree.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
     
     @Override

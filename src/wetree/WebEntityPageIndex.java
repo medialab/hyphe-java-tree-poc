@@ -25,6 +25,7 @@ public interface WebEntityPageIndex {
     public int getWebentity_fromPrefix(String prefix);
     public void addPlink(String sourcePage, String targetPage);
     public void addPlink(PLink pLink);
+    public void addPlinks(List<PLink> pLinks);
     public List<PLink> getPlinks(String page);
     public List<PLink> getPlinksInbound(String page);
     public List<PLink> getPlinksOutbound(String page);
