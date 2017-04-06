@@ -30,12 +30,12 @@ public class Wetree {
         boolean reset = true;
         wept.init(reset);
 
-        buildFakeCorpus(wept, 5, 100);
+//        buildFakeCorpus(wept, 5, 100);
         
-        benchmarkRandomWebEntity(wept, true);
+//        benchmarkRandomWebEntity(wept, true);
 //        benchmarkAllWebEntities(wept, false);
 
-//        foodchainBenchmark(wept);
+        foodchainBenchmark(wept);
         
 //        wept.log();
 

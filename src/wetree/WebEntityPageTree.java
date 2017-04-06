@@ -584,11 +584,6 @@ public class WebEntityPageTree implements WebEntityPageIndex {
             // Register the stub
             existingLinkNode.setNext(nextlinkid);
             existingLinkNode.write();
-            // Create the stub
-            LinkTreeNode linkNode = new LinkTreeNode(linkTreeFile, nextlinkid);
-            linkNode.setLru(node2id);
-            linkNode.write();
-            nextlinkid++;
         } else {
             // Register the stub
             if (direction) {
@@ -597,12 +592,16 @@ public class WebEntityPageTree implements WebEntityPageIndex {
                 lruNode.setInLinks(nextlinkid);
             }
             lruNode.write();
-            // Create the stub
-            LinkTreeNode linkNode = new LinkTreeNode(linkTreeFile, nextlinkid);
-            linkNode.setLru(node2id);
-            linkNode.write();
-            nextlinkid++;
         }
+        // Create the stub
+        LinkTreeNode linkNode = new LinkTreeNode(linkTreeFile, nextlinkid);
+        linkNode.setLru(node2id);
+        linkNode.write();
+        nextlinkid++;
+    }
+    
+    // Add a batch of link stubs
+    private void addLinkStubs(long node1id, List<Long> node2ids, boolean direction) throws IOException {
     }
     
     @Override

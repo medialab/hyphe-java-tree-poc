@@ -57,8 +57,4 @@ public interface WebEntityPageIndex {
     public static class QueryParameters {
         public QueryParameters() {}
     }
-    // Web Entity Link
-    public static class WELink {
-        public WELink() {}
-    }
 }
