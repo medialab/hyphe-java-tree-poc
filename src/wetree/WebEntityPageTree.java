@@ -5,6 +5,7 @@
  */
 package wetree;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.primitives.Chars;
@@ -26,6 +27,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import static wetree.LRUUtil.HTTPVariationLRU;
+import static wetree.LRUUtil.HTTPWWWVariationLRU;
+import static wetree.LRUUtil.WWWVariationLRU;
 
 
         
@@ -809,9 +813,18 @@ public class WebEntityPageTree implements WebEntityPageIndex {
     }
     
     private List<String> prefixExpand(String prefix) {
-        // TODO: generate the other prefixes
         ArrayList<String> result = new ArrayList<>();
         result.add(prefix);
+        
+        String variation1 = HTTPVariationLRU(prefix);
+        if (!Strings.isNullOrEmpty(variation1)) result.add(variation1);
+        
+        String variation2 = WWWVariationLRU(prefix);
+        if (!Strings.isNullOrEmpty(variation2)) result.add(variation2);
+        
+        String variation3 = HTTPWWWVariationLRU(prefix);
+        if (!Strings.isNullOrEmpty(variation3)) result.add(variation3);
+        
         return result;
     }
     
