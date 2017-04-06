@@ -5,6 +5,8 @@
  */
 package wetree;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 import com.google.common.primitives.Chars;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -12,7 +14,9 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import static java.util.Objects.isNull;
 import java.util.Stack;
@@ -130,6 +134,9 @@ public class WebEntityPageTree implements WebEntityPageIndex {
     
     @Override
     public void addPlinks(List<PLink> pLinks) {
+        Multimap<Long, Long> stubs = ArrayListMultimap.create();
+        Multimap<Long, Long> stubsReverse = ArrayListMultimap.create();
+        
         pLinks.forEach(pLink->{
             try {
                 long sourcenodeid = add(pLink.sourcePage).nodeid;
@@ -144,12 +151,21 @@ public class WebEntityPageTree implements WebEntityPageIndex {
                             "Link add issue: " + pLink.targetPage + " could not be found in the tree"
                     );
                 }
-                addLinkStub(sourcenodeid, targetnodeid, true);
-                addLinkStub(targetnodeid, sourcenodeid, false);
+                
+                stubs.put(sourcenodeid, targetnodeid);
+                stubsReverse.put(targetnodeid, sourcenodeid);
             } catch (IOException ex) {
                 Logger.getLogger(WebEntityPageTree.class.getName()).log(Level.SEVERE, null, ex);
             }
         });
+        
+        stubs.keySet().forEach((Long node1id)->{
+            addLinkStubs(node1id, stubs.get(node1id), true);
+        });
+        stubsReverse.keySet().forEach((Long node1id)->{
+            addLinkStubs(node1id, stubsReverse.get(node1id), false);
+        });
+
     }
     
     @Override
@@ -629,7 +645,7 @@ public class WebEntityPageTree implements WebEntityPageIndex {
     }
     
     // Add a batch of link stubs
-    private void addLinkStubs(long node1id, List<Long> node2ids, boolean direction) {
+    private void addLinkStubs(long node1id, Collection<Long> node2ids, boolean direction) {
         try {
             LruTreeNode lruNode = new LruTreeNode(lruTreeFile, node1id);
             long linksPointer = direction ? lruNode.getOutLinks() : lruNode.getInLinks();
@@ -652,15 +668,15 @@ public class WebEntityPageTree implements WebEntityPageIndex {
                 }
                 lruNode.write();
             }
-            int size = node2ids.size();
-            for (int i=0; i < size; i++) {
-                long node2id = node2ids.get(i);
+            Iterator it = node2ids.iterator();
+            while (it.hasNext()) {
+                long node2id = (Long) it.next();
                 
                 // Create the stub
                 LinkTreeNode linkNode = new LinkTreeNode(linkTreeFile, nextlinkid);
                 linkNode.setLru(node2id);
                 // If not last, register the next
-                if (i < size-1) {
+                if (it.hasNext()) {
                     linkNode.setNext(nextlinkid+1);
                 }
                 linkNode.write();
