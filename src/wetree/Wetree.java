@@ -10,6 +10,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -30,14 +31,18 @@ public class Wetree {
         wept = WebEntityPageTree.getInstance();
         wept.setDefaultWecreationrule(WebEntityCreationRules.RULE_DOMAIN);
         
-        boolean reset = true;
+        boolean reset = false;
         wept.init(reset);
 
-        buildFakeCorpus(wept, 1000, 1000000);
+//        buildFakeCorpus(wept, 1000, 1000000);
 
         List<WELink> links = wept.getWelinks();
-        System.out.println("Web Entity Links: " + links.size());
+        System.out.println(links.size() + " links");
         
+//        Set<Integer> wes = wept._getAllWebEntities_SLOW();
+//        System.out.println("Web Entities: " + wes.size());
+
+
 //        lruBenchmark(wept);
         
 //        wept.log();

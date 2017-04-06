@@ -7,6 +7,7 @@ package wetree;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.primitives.Chars;
 import java.io.File;
@@ -613,10 +614,62 @@ public class WebEntityPageTree implements WebEntityPageIndex {
     
     @Override
     public List<WELink> getWelinks() {
+        Multimap<Integer, Integer> wepairs = HashMultimap.create();
+        
+        HashMap<Long, Integer> nodeidToWeid = new HashMap<>();
+        
+        getWebentities().forEach(we->{
+            int we1id = we.getId();
+            we.getPrefixes().forEach(prefix->{
+                try {
+                    long prefixid = followLru(prefix).nodeid;
+                    walkWebEntityForLruNodeIds(prefixid).forEach(node1id->{
+                        try {
+                            LruTreeNode lru1Node = new LruTreeNode(lruTreeFile, node1id);
+                            long outlinks = lru1Node.getOutLinks();
+                            if (outlinks > 0) {
+                                LinkTreeNode linkNode = new LinkTreeNode(linkTreeFile, outlinks);
+                                
+                                long node2id = linkNode.getLru();
+                                int we2id;
+                                if (nodeidToWeid.containsKey(node2id)) {
+                                    we2id = nodeidToWeid.get(node2id);
+                                } else {
+                                    we2id = windupLruForWebEntityId(node2id);
+                                    nodeidToWeid.put(node2id, we2id);
+                                }
+                                
+                                wepairs.put(we1id, we2id);
+
+                                long next = linkNode.getNext();
+                                while(next > 0) {
+                                    linkNode.read(next);
+                                    node2id = linkNode.getLru();
+
+                                    if (nodeidToWeid.containsKey(node2id)) {
+                                        we2id = nodeidToWeid.get(node2id);
+                                    } else {
+                                        we2id = windupLruForWebEntityId(node2id);
+                                        nodeidToWeid.put(node2id, we2id);
+                                    }
+
+                                    wepairs.put(we1id, we2id);
+
+                                    next = linkNode.getNext();
+                                }
+                            }
+                        } catch (IOException ex) {
+                            Logger.getLogger(WebEntityPageTree.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    });
+                } catch (IOException ex) {
+                    Logger.getLogger(WebEntityPageTree.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            });
+        });
         ArrayList<WELink> result = new ArrayList<>();
-        List<WebEntity> webEntities = getWebentities();
-        webEntities.forEach(we->{
-            result.addAll(getWelinksOutbound(we.getId()));
+        wepairs.forEach((we1id, we2id)->{
+            result.add(new WELink(we1id, we2id));
         });
         return result;
     }
@@ -709,14 +762,14 @@ public class WebEntityPageTree implements WebEntityPageIndex {
                             LinkTreeNode linkNode = new LinkTreeNode(linkTreeFile, links);
 
                             int we2id = windupLruForWebEntityId(linkNode.getLru());
-                            weidMap.put(we2id, weidMap.getOrDefault(we2id, 0));
+                            weidMap.put(we2id, weidMap.getOrDefault(we2id, 0) + 1);
 
                             long next = linkNode.getNext();
                             while(next > 0) {
                                 linkNode.read(next);
 
                                 we2id = windupLruForWebEntityId(linkNode.getLru());
-                                weidMap.put(we2id, weidMap.getOrDefault(we2id, 0));
+                                weidMap.put(we2id, weidMap.getOrDefault(we2id, 0) + 1);
 
                                 next = linkNode.getNext();
                             }
@@ -732,7 +785,7 @@ public class WebEntityPageTree implements WebEntityPageIndex {
             Logger.getLogger(WebEntityPageTree.class.getName()).log(Level.SEVERE, null, ex);
         }
         ArrayList<Integer> result = new ArrayList<>();
-        weidMap.keySet().forEach(weid->{ result.add(weid);});
+        weidMap.keySet().forEach(weid->{ result.add(weid); });
         return result;
     }
     
