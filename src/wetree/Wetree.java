@@ -91,10 +91,13 @@ public class Wetree {
             });
         });
         
-        System.out.println("\n# Test getPages(String prefix) on s:http|h:com|h:site|h:www|");
+        System.out.println("\n:: Test getPages(String prefix) on: 's:http|h:com|h:site|h:www|p:people|p:maman|'");
         wept.getPages("s:http|h:com|h:site|h:www|").forEach(lru->{
-            System.out.println(" - " + lru);
+            System.out.println("   - " + lru);
         });
+                
+        System.out.println("\n:: Test getPrefix(String lru) on: 's:http|h:com|h:site|h:www|p:people|p:maman|'");
+        System.out.println("   > " + wept.getPrefix("s:http|h:com|h:site|h:www|p:people|p:maman|"));
                 
 //        wept.log();
     }
