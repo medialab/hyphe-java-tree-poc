@@ -222,6 +222,7 @@ public class Wetree {
         // Instantiating and resetting DB files
         WebEntityPageTree wept;
         wept = WebEntityPageTree.getInstance();
+        wept.setDefaultWecreationrule(WebEntityCreationRules.RULE_DOMAIN);
         try {
             wept.init(true);
         } catch (FileNotFoundException ex) {
