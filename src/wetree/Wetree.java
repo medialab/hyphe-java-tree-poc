@@ -63,26 +63,28 @@ public class Wetree {
         WebEntities.getInstance().create("Bird");
         WebEntities.getInstance().create("Plant");
         
-        wept.addLink("Plankton:Phytoplankton", "Plankton:Zooplankton");
-        wept.addLink("Plankton:Phytoplankton", "Shell:Mussels");
-        wept.addLink("Plankton:Zooplankton", "Crustacean:Prawn");
-        wept.addLink("Plankton:Zooplankton", "Shell:Mussels");
-        wept.addLink("Crustacean:Prawn", "Fish:Fish");
-        wept.addLink("Crustacean:Prawn", "Bird:Gull");
-        wept.addLink("Shell:Mussels", "Bird:Gull");
-        wept.addLink("Shell:Mussels", "Crustacean:Crab");
-        wept.addLink("Shell:Mussels", "Crustacean:Lobster");
-        wept.addLink("Shell:Mussels", "Shell:Whelk");
-        wept.addLink("Crustacean:Crab", "Bird:Gull");
-        wept.addLink("Crustacean:Crab", "Crustacean:Lobster");
-        wept.addLink("Plant:Seaweed", "Shell:Limpets");
-        wept.addLink("Shell:Limpets", "Crustacean:Crab");
-        wept.addLink("Shell:Limpets", "Bird:Gull");
-        wept.addLink("Shell:Limpets", "Shell:Whelk");
-        wept.addLink("Shell:Limpets", "Crustacean:Lobster");
-        wept.addLink("Shell:Whelk", "Bird:Gull");
-        wept.addLink("Shell:Whelk", "Crustacean:Lobster");
-        
+        ArrayList<PLink> pLinks = new ArrayList<>();
+        pLinks.add(new PLink("Plankton:Phytoplankton", "Plankton:Zooplankton"));
+        pLinks.add(new PLink("Plankton:Phytoplankton", "Shell:Mussels"));
+        pLinks.add(new PLink("Plankton:Zooplankton", "Crustacean:Prawn"));
+        pLinks.add(new PLink("Plankton:Zooplankton", "Shell:Mussels"));
+        pLinks.add(new PLink("Crustacean:Prawn", "Fish:Fish"));
+        pLinks.add(new PLink("Crustacean:Prawn", "Bird:Gull"));
+        pLinks.add(new PLink("Shell:Mussels", "Bird:Gull"));
+        pLinks.add(new PLink("Shell:Mussels", "Crustacean:Crab"));
+        pLinks.add(new PLink("Shell:Mussels", "Crustacean:Lobster"));
+        pLinks.add(new PLink("Shell:Mussels", "Shell:Whelk"));
+        pLinks.add(new PLink("Crustacean:Crab", "Bird:Gull"));
+        pLinks.add(new PLink("Crustacean:Crab", "Crustacean:Lobster"));
+        pLinks.add(new PLink("Plant:Seaweed", "Shell:Limpets"));
+        pLinks.add(new PLink("Shell:Limpets", "Crustacean:Crab"));
+        pLinks.add(new PLink("Shell:Limpets", "Bird:Gull"));
+        pLinks.add(new PLink("Shell:Limpets", "Shell:Whelk"));
+        pLinks.add(new PLink("Shell:Limpets", "Crustacean:Lobster"));
+        pLinks.add(new PLink("Shell:Whelk", "Bird:Gull"));
+        pLinks.add(new PLink("Shell:Whelk", "Crustacean:Lobster"));
+        wept.addPlinks(pLinks);
+
         System.out.println("\nWeb Entities:");
         ArrayList<WebEntity> wes = (ArrayList<WebEntity>) WebEntities.getInstance().getAll();
         wes.forEach(we->{
@@ -235,7 +237,7 @@ public class Wetree {
         while (link_count-- > 0) {
             String sourcelru = lrus.get(ThreadLocalRandom.current().nextInt(1, lrus.size()));
             String targetlru = lrus.get(ThreadLocalRandom.current().nextInt(1, lrus.size()));
-            wept.addLink(sourcelru, targetlru);
+            wept.addPlink(sourcelru, targetlru);
         }
         System.out.println(" done.");
     }

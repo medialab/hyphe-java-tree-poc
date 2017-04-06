@@ -5,6 +5,8 @@
  */
 package wetree;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 import com.google.common.primitives.Chars;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -12,7 +14,9 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import static java.util.Objects.isNull;
 import java.util.Stack;
@@ -73,7 +77,7 @@ public class WebEntityPageTree implements WebEntityPageIndex {
     public void addPage(String page) {
         try {
             // Add the lru to the lruTree
-            long nodeid = add(page);
+            long nodeid = add(page).nodeid;
             
             // The last child has to get the ending marker.
             // It means "this branch is a string to retrieve"
@@ -90,7 +94,7 @@ public class WebEntityPageTree implements WebEntityPageIndex {
     public void associatePrefixWithWebentity(String lru, int weid) {
         try {
             // Add the lru to the lruTree
-            long nodeid = add(lru);
+            long nodeid = add(lru).nodeid;
             
             // The last child has to get the ending marker
             LruTreeNode lruNode = new LruTreeNode(lruTreeFile, nodeid);
@@ -101,21 +105,144 @@ public class WebEntityPageTree implements WebEntityPageIndex {
         }
     }
     
-    public void addLink(String sourcelru, String targetlru) throws IOException {
-        long sourcenodeid = followLru(sourcelru).nodeid;
-        long targetnodeid = followLru(targetlru).nodeid;
-        if (sourcenodeid < 0) {
-            throw new java.lang.RuntimeException(
-                "Link add issue: " + sourcelru + " could not be found in the tree"
-            );
+    @Override
+    public void addPlink(PLink pLink) {
+        addPlink(pLink.sourcePage, pLink.targetPage);
+    }
+    
+    @Override
+    public void addPlink(String sourcePage, String targetPage) {
+        try {
+            long sourcenodeid = add(sourcePage).nodeid;
+            long targetnodeid = add(targetPage).nodeid;
+            if (sourcenodeid < 0) {
+                throw new java.lang.RuntimeException(
+                        "Link add issue: " + sourcePage + " could not be found in the tree"
+                );
+            }
+            if (targetnodeid < 0) {
+                throw new java.lang.RuntimeException(
+                        "Link add issue: " + targetPage + " could not be found in the tree"
+                );
+            }
+            addLinkStub(sourcenodeid, targetnodeid, true);
+            addLinkStub(targetnodeid, sourcenodeid, false);
+        } catch (IOException ex) {
+            Logger.getLogger(WebEntityPageTree.class.getName()).log(Level.SEVERE, null, ex);
         }
-        if (targetnodeid < 0) {
-            throw new java.lang.RuntimeException(
-                "Link add issue: " + sourcelru + " could not be found in the tree"
-            );
+    }
+    
+    @Override
+    public void addPlinks(List<PLink> pLinks) {
+        Multimap<Long, Long> stubs = ArrayListMultimap.create();
+        Multimap<Long, Long> stubsReverse = ArrayListMultimap.create();
+        
+        pLinks.forEach(pLink->{
+            try {
+                long sourcenodeid = add(pLink.sourcePage).nodeid;
+                long targetnodeid = add(pLink.targetPage).nodeid;
+                if (sourcenodeid < 0) {
+                    throw new java.lang.RuntimeException(
+                            "Link add issue: " + pLink.sourcePage + " could not be found in the tree"
+                    );
+                }
+                if (targetnodeid < 0) {
+                    throw new java.lang.RuntimeException(
+                            "Link add issue: " + pLink.targetPage + " could not be found in the tree"
+                    );
+                }
+                
+                stubs.put(sourcenodeid, targetnodeid);
+                stubsReverse.put(targetnodeid, sourcenodeid);
+            } catch (IOException ex) {
+                Logger.getLogger(WebEntityPageTree.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        });
+        
+        stubs.keySet().forEach((Long node1id)->{
+            addLinkStubs(node1id, stubs.get(node1id), true);
+        });
+        stubsReverse.keySet().forEach((Long node1id)->{
+            addLinkStubs(node1id, stubsReverse.get(node1id), false);
+        });
+
+//        stubs.forEach((node1id, node2id)->{
+//            addLinkStub(node1id, node2id, true);
+//        });
+//        stubsReverse.forEach((node1id, node2id)->{
+//            addLinkStub(node1id, node2id, false);
+//        });
+
+    }
+    
+    @Override
+    public List<PLink> getPlinks(String page) {
+        ArrayList<PLink> result = new ArrayList<>();
+        result.addAll(getPlinksInbound(page));
+        result.addAll(getPlinksOutbound(page));
+        return result;
+    }
+        
+    @Override
+    public List<PLink> getPlinksInbound(String page) {
+        ArrayList<PLink> result = new ArrayList<>();
+        ArrayList<Long> sourceNodeIds = new ArrayList<>();
+        try {
+            long nodeid = followLru(page).nodeid;
+            LruTreeNode lruNode = new LruTreeNode(lruTreeFile, nodeid);
+            // Follow the links
+            LinkTreeNode linkNode = new LinkTreeNode(linkTreeFile, lruNode.getInLinks());
+            sourceNodeIds.add(linkNode.getLru());
+            long next = linkNode.getNext();
+            while(next > 0) {
+                linkNode.read(next);
+                sourceNodeIds.add(linkNode.getLru());
+                next = linkNode.getNext();
+            }
+            sourceNodeIds.forEach(tnodeid->{   
+                try {
+                    String sourceLru = windupLru(tnodeid);
+                    PLink pLink = new PLink(sourceLru, page);
+                    result.add(pLink);
+                } catch (IOException ex) {
+                    Logger.getLogger(WebEntityPageTree.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            });
+        } catch (IOException ex) {
+            Logger.getLogger(WebEntityPageTree.class.getName()).log(Level.SEVERE, null, ex);
         }
-        addLinkStub(sourcenodeid, targetnodeid, true);
-        addLinkStub(targetnodeid, sourcenodeid, false);
+        return result;
+    }
+    
+    @Override
+    public List<PLink> getPlinksOutbound(String page) {
+        ArrayList<PLink> result = new ArrayList<>();
+        ArrayList<Long> targetNodeIds = new ArrayList<>();
+        try {
+            long nodeid = followLru(page).nodeid;
+            LruTreeNode lruNode = new LruTreeNode(lruTreeFile, nodeid);
+            // Follow the links
+            LinkTreeNode linkNode = new LinkTreeNode(linkTreeFile, lruNode.getOutLinks());
+            targetNodeIds.add(linkNode.getLru());
+            long next = linkNode.getNext();
+            while(next > 0) {
+                linkNode.read(next);
+                targetNodeIds.add(linkNode.getLru());
+                next = linkNode.getNext();
+            }
+            targetNodeIds.forEach(tnodeid->{   
+                try {
+                    String targetLru = windupLru(tnodeid);
+                    PLink pLink = new PLink(page, targetLru);
+                    result.add(pLink);
+                } catch (IOException ex) {
+                    Logger.getLogger(WebEntityPageTree.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            });
+        } catch (IOException ex) {
+            Logger.getLogger(WebEntityPageTree.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return result;
     }
     
     // Return all LRUs - walks all the tree, SLOW, mostly for monitoring
@@ -447,9 +574,10 @@ public class WebEntityPageTree implements WebEntityPageIndex {
     }
     
     // Add a string to the tree (period)
-    private long add(String lru) throws IOException {
+    private WalkHistory add(String lru) throws IOException {
         char[] chars = lru.toCharArray();
-        long nodeid = 0;
+        WalkHistory wh = new WalkHistory();
+        wh.nodeid = 0;
         int i = 0;
         while (i < chars.length) {
             char c = chars[i];
@@ -457,16 +585,16 @@ public class WebEntityPageTree implements WebEntityPageIndex {
             
             // First we require the char on current level
             // (require = get if exists, create if not)
-            nodeid = requireCharFromNextSiblings(nodeid, charbytes);
+            wh.nodeid = requireCharFromNextSiblings(wh.nodeid, charbytes);
             
             i++;
             
             // Is there a child?
-            LruTreeNode lruNode = new LruTreeNode(lruTreeFile, nodeid);
+            LruTreeNode lruNode = new LruTreeNode(lruTreeFile, wh.nodeid);
             long child = lruNode.getChild();
             if (child > 0 && i < chars.length) {
                 // There's a child: search him and its siblings
-                nodeid = child;
+                wh.nodeid = child;
             } else {
                 // There is no child: we jump to the next loop
                 // where we store the rest of the letters in new children
@@ -481,46 +609,89 @@ public class WebEntityPageTree implements WebEntityPageIndex {
             
             // We're here if the last letter had no child
             // Let's create children until the string is stored
-            nodeid = createChild(nodeid, charbytes);
+            wh.nodeid = createChild(wh.nodeid, charbytes);
             
             i++;
         }
         
-        return nodeid;
+        return wh;
     }
     
     // Add a link stub
-    private void addLinkStub(long node1id, long node2id, boolean direction) throws IOException {
-        LruTreeNode lruNode = new LruTreeNode(lruTreeFile, node1id);
-        long linksPointer = direction ? lruNode.getOutLinks() : lruNode.getInLinks();
-        if (linksPointer > 0) {
-            LinkTreeNode existingLinkNode = new LinkTreeNode(linkTreeFile, linksPointer);
-            long next = existingLinkNode.getNext();
-            while(next > 0) {
-                existingLinkNode.read(next);
-                next = existingLinkNode.getNext();
-            }
-            // Register the stub
-            existingLinkNode.setNext(nextlinkid);
-            existingLinkNode.write();
-            // Create the stub
-            LinkTreeNode linkNode = new LinkTreeNode(linkTreeFile, nextlinkid);
-            linkNode.setLru(node2id);
-            linkNode.write();
-            nextlinkid++;
-        } else {
-            // Register the stub
-            if (direction) {
-                lruNode.setOutLinks(nextlinkid);
+    private void addLinkStub(long node1id, long node2id, boolean direction) {
+        try {
+            LruTreeNode lruNode = new LruTreeNode(lruTreeFile, node1id);
+            long linksPointer = direction ? lruNode.getOutLinks() : lruNode.getInLinks();
+            if (linksPointer > 0) {
+                LinkTreeNode existingLinkNode = new LinkTreeNode(linkTreeFile, linksPointer);
+                long next = existingLinkNode.getNext();
+                while(next > 0) {
+                    existingLinkNode.read(next);
+                    next = existingLinkNode.getNext();
+                }
+                // Register the stub
+                existingLinkNode.setNext(nextlinkid);
+                existingLinkNode.write();
             } else {
-                lruNode.setInLinks(nextlinkid);
+                // Register the stub
+                if (direction) {
+                    lruNode.setOutLinks(nextlinkid);
+                } else {
+                    lruNode.setInLinks(nextlinkid);
+                }
+                lruNode.write();
             }
-            lruNode.write();
             // Create the stub
             LinkTreeNode linkNode = new LinkTreeNode(linkTreeFile, nextlinkid);
             linkNode.setLru(node2id);
             linkNode.write();
             nextlinkid++;
+        } catch (IOException ex) {
+            Logger.getLogger(WebEntityPageTree.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
+    // Add a batch of link stubs
+    private void addLinkStubs(long node1id, Collection<Long> node2ids, boolean direction) {
+        try {
+            LruTreeNode lruNode = new LruTreeNode(lruTreeFile, node1id);
+            long linksPointer = direction ? lruNode.getOutLinks() : lruNode.getInLinks();
+            if (linksPointer > 0) {
+                LinkTreeNode existingLinkNode = new LinkTreeNode(linkTreeFile, linksPointer);
+                long next = existingLinkNode.getNext();
+                while(next > 0) {
+                    existingLinkNode.read(next);
+                    next = existingLinkNode.getNext();
+                }
+                // Register the stub
+                existingLinkNode.setNext(nextlinkid);
+                existingLinkNode.write();
+            } else {
+                // Register the stub
+                if (direction) {
+                    lruNode.setOutLinks(nextlinkid);
+                } else {
+                    lruNode.setInLinks(nextlinkid);
+                }
+                lruNode.write();
+            }
+            Iterator it = node2ids.iterator();
+            while (it.hasNext()) {
+                long node2id = (Long) it.next();
+                
+                // Create the stub
+                LinkTreeNode linkNode = new LinkTreeNode(linkTreeFile, nextlinkid);
+                linkNode.setLru(node2id);
+                // If not last, register the next
+                if (it.hasNext()) {
+                    linkNode.setNext(nextlinkid+1);
+                }
+                linkNode.write();
+                nextlinkid++;
+                
+            }
+        } catch (IOException ex) {
+            Logger.getLogger(WebEntityPageTree.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
     
@@ -540,6 +711,19 @@ public class WebEntityPageTree implements WebEntityPageIndex {
         try {
             WalkHistory wh = followLru(lru);
             return wh.lastWebEntityId;
+        } catch (IOException ex) {
+            Logger.getLogger(WebEntityPageTree.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return -1;
+    }
+    
+    @Override
+    public int getWebentity_fromPrefix(String prefix) {
+        WalkHistory wh;
+        try {
+            wh = followLru(prefix);
+            LruTreeNode lruNode = new LruTreeNode(lruTreeFile, wh.nodeid);
+            return lruNode.getWebEntity();
         } catch (IOException ex) {
             Logger.getLogger(WebEntityPageTree.class.getName()).log(Level.SEVERE, null, ex);
         }
