@@ -89,12 +89,21 @@ public class WebEntityPageTree implements WebEntityPageIndex {
             // Add the lru to the lruTree
             WalkHistory wh = add(page);
             
+//            System.out.println("\nAdded page " + page);
+//            System.out.println(" > last rule = " + wh.lastWebEntityCreationRuleId + " in " + wh.lastWebEntityCreationRuleIdPosition + "  > last WE = " + wh.lastWebEntityId + " in " + wh.lastWebEntityIdPosition);
+            
             // Create web entities
-            if (wh.lastWebEntityCreationRuleId > 0 && wh.lastWebEntityCreationRuleId >= wh.lastWebEntityId) {
+            if (wh.lastWebEntityCreationRuleIdPosition >= 0 && wh.lastWebEntityCreationRuleIdPosition >= wh.lastWebEntityIdPosition) {
+//                System.out.println(" > Apply WE creation rule");
                 // Apply Creation Rule
                 WebEntityCreationRule wecr = WebEntityCreationRules.getInstance().get(wh.lastWebEntityCreationRuleId);
-                applyWebEntityCreationRule(wecr, page);
+                WebEntity we = applyWebEntityCreationRule(wecr, page);
+                if (isNull(we)) {
+//                    System.out.println("   ...fail -> fallback on default WE creation rule");
+                   applyDefaultWebEntityCreationRule(page);
+                }
             } else if (wh.lastWebEntityId <= 0) {
+//                System.out.println(" > Apply default WE creation rule");
                 applyDefaultWebEntityCreationRule(page);
             }
             
@@ -711,10 +720,12 @@ public class WebEntityPageTree implements WebEntityPageIndex {
             if (weid > 0) {
                 wh.lastWebEntityId = weid;
                 wh.lastWebEntityPrefix = lru.substring(0, i+1);
+                wh.lastWebEntityIdPosition = i;
             }
             int wecrid = lruNode.getWebEntityCreationRule();
             if (wecrid > 0) {
                 wh.lastWebEntityCreationRuleId = wecrid;
+                wh.lastWebEntityCreationRuleIdPosition = i;
             }
             
             i++;
@@ -974,10 +985,12 @@ public class WebEntityPageTree implements WebEntityPageIndex {
             if (weid > 0) {
                 wh.lastWebEntityId = weid;
                 wh.lastWebEntityPrefix = lru.substring(0, i+1);
+                wh.lastWebEntityIdPosition = i;
             }
             int wecrid = lruNode.getWebEntityCreationRule();
             if (wecrid > 0) {
                 wh.lastWebEntityCreationRuleId = wecrid;
+                wh.lastWebEntityCreationRuleIdPosition = i;
             }
             
             // The char has been found.
@@ -1382,7 +1395,9 @@ public class WebEntityPageTree implements WebEntityPageIndex {
     
     private static class WalkHistory {
         public int lastWebEntityId = 0;
+        public int lastWebEntityIdPosition = -1;
         public int lastWebEntityCreationRuleId = 0;
+        public int lastWebEntityCreationRuleIdPosition = -1;
         private String lastWebEntityPrefix;
         public long nodeid = -1;
         public boolean success = false;
