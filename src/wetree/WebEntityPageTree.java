@@ -16,9 +16,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import static java.util.Objects.isNull;
+import java.util.Set;
 import java.util.Stack;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -134,44 +136,50 @@ public class WebEntityPageTree implements WebEntityPageIndex {
     
     @Override
     public void addPlinks(List<PLink> pLinks) {
-        Multimap<Long, Long> stubs = ArrayListMultimap.create();
-        Multimap<Long, Long> stubsReverse = ArrayListMultimap.create();
+        Multimap<String, String> stubsString = ArrayListMultimap.create();
+        Multimap<String, String> stubsReverseString = ArrayListMultimap.create();
+        Set<String> pages = new HashSet<>();
         
         pLinks.forEach(pLink->{
+            pages.add(pLink.sourcePage);
+            pages.add(pLink.targetPage);
+            stubsString.put(pLink.sourcePage, pLink.targetPage);
+            stubsReverseString.put(pLink.targetPage, pLink.sourcePage);
+        });
+        
+        // Add each different page and index their nodeid
+        HashMap<String, Long> nodeIdIndex = new HashMap<>();
+        Iterator pit = pages.iterator();
+        while (pit.hasNext()) {
             try {
-                long sourcenodeid = add(pLink.sourcePage).nodeid;
-                long targetnodeid = add(pLink.targetPage).nodeid;
-                if (sourcenodeid < 0) {
+                String p = (String) pit.next();
+                long nodeid = add(p).nodeid;
+                if (nodeid < 0) {
                     throw new java.lang.RuntimeException(
-                            "Link add issue: " + pLink.sourcePage + " could not be found in the tree"
+                            "Link add issue: " + p + " could not be found in the tree"
                     );
                 }
-                if (targetnodeid < 0) {
-                    throw new java.lang.RuntimeException(
-                            "Link add issue: " + pLink.targetPage + " could not be found in the tree"
-                    );
-                }
-                
-                stubs.put(sourcenodeid, targetnodeid);
-                stubsReverse.put(targetnodeid, sourcenodeid);
+                nodeIdIndex.put(p, nodeid);
             } catch (IOException ex) {
                 Logger.getLogger(WebEntityPageTree.class.getName()).log(Level.SEVERE, null, ex);
             }
+        }
+        
+        stubsString.keySet().forEach(lru1->{
+            ArrayList<Long> node2ids = new ArrayList<>();
+            stubsString.get(lru1).forEach(lru2->{
+                node2ids.add(nodeIdIndex.get(lru2));
+            });
+            addLinkStubs(nodeIdIndex.get(lru1), node2ids, true);
         });
         
-        stubs.keySet().forEach((Long node1id)->{
-            addLinkStubs(node1id, stubs.get(node1id), true);
+        stubsReverseString.keySet().forEach(lru1->{
+            ArrayList<Long> node2ids = new ArrayList<>();
+            stubsReverseString.get(lru1).forEach(lru2->{
+                node2ids.add(nodeIdIndex.get(lru2));
+            });
+            addLinkStubs(nodeIdIndex.get(lru1), node2ids, false);
         });
-        stubsReverse.keySet().forEach((Long node1id)->{
-            addLinkStubs(node1id, stubsReverse.get(node1id), false);
-        });
-
-//        stubs.forEach((node1id, node2id)->{
-//            addLinkStub(node1id, node2id, true);
-//        });
-//        stubsReverse.forEach((node1id, node2id)->{
-//            addLinkStub(node1id, node2id, false);
-//        });
 
     }
     
