@@ -51,44 +51,51 @@ public class Wetree {
         wept.addPage("s:http|h:com|h:site|p:people|p:papa|");
         wept.addPage("s:http|h:com|h:site|p:people|p:maman|");
         wept.addPage("s:http|h:com|h:site|h:www|");
+        wept.addPage("s:http|h:com|h:site|h:www|p:people|p:maman|");
 
         wept.addPage("s:http|h:com|h:twitter|p:papa|");
         wept.addPage("s:http|h:com|h:twitter|p:pépé|");
         wept.addPage("s:http|h:com|h:twitter|p:pépé|today|");
         wept.addPage("s:http|h:com|h:twitter|p:pépé|yesterday|");
         
+        wept.addPlink("s:http|h:com|h:site|p:people|p:papa|", "s:http|h:com|h:site|p:people|p:maman|");
+        wept.addPlink("s:http|h:com|h:site|p:people|p:maman|", "s:http|h:com|h:site|p:people|p:papa|");
+        
+        wept.addPlink("s:http|h:com|h:site|p:people|p:papa|", "s:http|h:com|h:twitter|p:papa|");
+
+        System.out.println("\nLRUs:");
+        wept._getAllLrus_SLOW().forEach(lru->{
+            System.out.println(lru);
+        });
+        
+        System.out.println("\nLRU Links:");
+        wept._geAllLruLinks_SLOW().forEach(link->{
+            System.out.println(link[0] + " -> " + link[1]);
+        });
+        
         System.out.println("\nWeb Entities:");
-        ArrayList<WebEntity> wes = (ArrayList<WebEntity>) WebEntities.getInstance().getAll();
-        wes.forEach(we->{
+        WebEntities.getInstance().getAll().forEach(we->{
             System.out.print(we.getId() + ". ");
             we.getPrefixes().forEach(p->{
                 System.out.print(p + " ");
             });
             System.out.println();
             System.out.println("   LRUs:");
-            ArrayList<String> lrus = wept.getPages(we.getId());
-            lrus.forEach(lru->{
+            wept.getPages(we.getId()).forEach(lru->{
                 System.out.println("   - " + lru);
             });
-            System.out.println("   Links to other web entities:");
+            System.out.println("   W. E. Links:");
             List<WELink> weLinks = wept.getWelinksOutbound(we.getId());
             weLinks.forEach(weLink->{
                 System.out.println("   -> " + weLink.targetWebentityid);
             });
         });
         
-        System.out.println("\nLRUs:");
-        ArrayList<String> lrus = wept._getAllLrus_SLOW();
-        lrus.forEach(lru->{
-            System.out.println(lru);
+        System.out.println("\n# Test getPages(String prefix) on s:http|h:com|h:site|h:www|");
+        wept.getPages("s:http|h:com|h:site|h:www|").forEach(lru->{
+            System.out.println(" - " + lru);
         });
-        
-        ArrayList<String[]> links = wept._geAllLruLinks_SLOW();
-        System.out.println("\nLRU Links:");
-        links.forEach(link->{
-            System.out.println(link[0] + " -> " + link[1]);
-        });
-        
+                
 //        wept.log();
     }
     

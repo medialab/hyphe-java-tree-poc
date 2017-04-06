@@ -91,12 +91,11 @@ public class WebEntityPageTree implements WebEntityPageIndex {
             
             // Create web entities
             if (wh.lastWebEntityCreationRuleId > 0 && wh.lastWebEntityCreationRuleId >= wh.lastWebEntityId) {
-                System.out.println("Add web entity for lru " + page);
                 // Apply Creation Rule
                 WebEntityCreationRule wecr = WebEntityCreationRules.getInstance().get(wh.lastWebEntityCreationRuleId);
-                WebEntity we = applyWebEntityCreationRule(wecr, page);
+                applyWebEntityCreationRule(wecr, page);
             } else if (wh.lastWebEntityId <= 0) {
-                WebEntity we = applyDefaultWebEntityCreationRule(page);
+                applyDefaultWebEntityCreationRule(page);
             }
             
             // The last child has to get the ending marker.
