@@ -35,9 +35,9 @@ public interface WebEntityPageIndex {
     public List<WELink> getWelinksOutbound(String page);
 //    public List<int> getWebEntityParent(int weid);
 //    public List<int> getWebEntityChild(int weid);
-//    public int getPageDegree(String page);
-//    public int getPageIndegree(String page);
-//    public int getPageOutdegree(String page);
+    public int getPageDegree(String page);
+    public int getPageIndegree(String page);
+    public int getPageOutdegree(String page);
     public List<WELink> getWelinks(int weid);
     public List<WELink> getWelinksInbound(int weid);
     public List<WELink> getWelinksOutbound(int weid);

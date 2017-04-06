@@ -279,6 +279,39 @@ public class WebEntityPageTree implements WebEntityPageIndex {
         return result;
     }
     
+    public int getPageDegree(String page) {
+        try {
+            long nodeid = followLru(page).nodeid;
+            LruTreeNode lruNode = new LruTreeNode(lruTreeFile, nodeid);
+            return lruNode.getIndegree() + lruNode.getOutdegree();
+        } catch (IOException ex) {
+            Logger.getLogger(WebEntityPageTree.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return -1;
+    }
+    
+    public int getPageIndegree(String page) {
+        try {
+            long nodeid = followLru(page).nodeid;
+            LruTreeNode lruNode = new LruTreeNode(lruTreeFile, nodeid);
+            return lruNode.getIndegree();
+        } catch (IOException ex) {
+            Logger.getLogger(WebEntityPageTree.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return -1;
+    }
+    
+    public int getPageOutdegree(String page) {
+        try {
+            long nodeid = followLru(page).nodeid;
+            LruTreeNode lruNode = new LruTreeNode(lruTreeFile, nodeid);
+            return lruNode.getOutdegree();
+        } catch (IOException ex) {
+            Logger.getLogger(WebEntityPageTree.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return -1;
+    }
+    
     // Return all LRUs - walks all the tree, SLOW, mostly for monitoring
     public ArrayList<String> _getAllLrus_SLOW() throws IOException {
         ArrayList<String> result = new ArrayList<>();

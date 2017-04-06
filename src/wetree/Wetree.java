@@ -63,10 +63,17 @@ public class Wetree {
         wept.addPlink("s:http|h:com|h:site|p:people|p:maman|", "s:http|h:com|h:site|p:people|p:papa|");
         
         wept.addPlink("s:http|h:com|h:site|p:people|p:papa|", "s:http|h:com|h:twitter|p:papa|");
-
+        
+        ArrayList<PLink> twitterHomeLinks = new ArrayList<>();
+        twitterHomeLinks.add(new PLink("s:http|h:com|h:twitter|p:papa|", "s:http|h:com|h:twitter|h:www|"));
+        twitterHomeLinks.add(new PLink("s:http|h:com|h:twitter|p:pépé|", "s:http|h:com|h:twitter|h:www|"));
+        twitterHomeLinks.add(new PLink("s:http|h:com|h:twitter|p:pépé|today|", "s:http|h:com|h:twitter|h:www|"));
+        twitterHomeLinks.add(new PLink("s:http|h:com|h:twitter|p:pépé|yesterday|", "s:http|h:com|h:twitter|h:www|"));
+        wept.addPlinks(twitterHomeLinks);
+        
         System.out.println("\nLRUs:");
         wept._getAllLrus_SLOW().forEach(lru->{
-            System.out.println(lru);
+            System.out.println(lru + "  " + wept.getPageIndegree(lru) + "=>|=>" + wept.getPageOutdegree(lru));
         });
         
         System.out.println("\nLRU Links:");
@@ -122,7 +129,6 @@ public class Wetree {
         wept.getWelinks("s:http|h:com|h:site|p:people|p:papa|").forEach(weLink->{
             System.out.println("   - " + weLink.sourceWebentityid + " => " + weLink.targetWebentityid);
         });
-        
         
         System.out.println("\n:: Test getWelinksInbound(String page) on: 's:http|h:com|h:site|p:people|p:papa|'");
         wept.getWelinksInbound("s:http|h:com|h:site|p:people|p:papa|").forEach(weLink->{
