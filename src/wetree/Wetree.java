@@ -74,7 +74,7 @@ public class Wetree {
         });
         
         System.out.println("\nWeb Entities:");
-        WebEntities.getInstance().getAll().forEach(we->{
+        wept.getWebentities().forEach(we->{
             System.out.print(we.getId() + ". ");
             we.getPrefixes().forEach(p->{
                 System.out.print(p + " ");
