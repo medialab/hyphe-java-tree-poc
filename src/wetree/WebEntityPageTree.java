@@ -1034,7 +1034,7 @@ public class WebEntityPageTree implements WebEntityPageIndex {
                         entries[4] = Long.toString(sourcewh.lastWebEntityId);
                         entries[5] = Long.toString(targetwh.lastWebEntityId);
                         entries[6] = WebEntities.getInstance().get(sourcewh.lastWebEntityId).getName();
-                        entries[7] = WebEntities.getInstance().get(targetwh.lastWebEntityId).getName();
+                        entries[7] = targetwh.lastWebEntityId > 0 ? WebEntities.getInstance().get(targetwh.lastWebEntityId).getName() : "-1";
                         
                         writer.writeNext(entries);
                     } catch (IOException ex) {
