@@ -933,7 +933,7 @@ public class WebEntityPageTree implements WebEntityPageIndex {
     public void exportWebentitiesCSV(String path, boolean exportLinks) throws IOException {
         CSVWriter writer = new CSVWriter(new FileWriter(path), ',');
         // feed in your array (or convert your data to an array)
-        String[] headEntries = "id,name,prefixes,outlinks".split(",");
+        String[] headEntries = "id,name,prefixes,out_links".split(",");
         writer.writeNext(headEntries);
         
         // Get All Links
@@ -963,7 +963,7 @@ public class WebEntityPageTree implements WebEntityPageIndex {
     public void exportWebentityLinksCSV(String path) throws IOException {
         CSVWriter writer = new CSVWriter(new FileWriter(path), ',');
         // feed in your array (or convert your data to an array)
-        String[] headEntries = "sourceid,targetid,sourcename,targetname".split(",");
+        String[] headEntries = "source_id,target_id,source_name,target_name".split(",");
         writer.writeNext(headEntries);
 
         // Get All Links
@@ -982,7 +982,7 @@ public class WebEntityPageTree implements WebEntityPageIndex {
     public void exportLrusCSV(String path, boolean exportLinks) throws IOException {
         CSVWriter writer = new CSVWriter(new FileWriter(path), ',');
         // feed in your array (or convert your data to an array)
-        String[] headEntries = "lru,nodeid,weid,wename,outlinks_count,outlinks".split(","); // TODO: fix it
+        String[] headEntries = "lru,node_id,we_id,we_name,out_links_count,out_links".split(","); // TODO: fix it
         writer.writeNext(headEntries);
         
         getWebentities().forEach(we->{
@@ -1006,6 +1006,41 @@ public class WebEntityPageTree implements WebEntityPageIndex {
                 } catch (IOException ex) {
                     Logger.getLogger(WebEntityPageTree.class.getName()).log(Level.SEVERE, null, ex);
                 }
+                
+            });
+        });
+        
+        writer.close();
+    }
+    
+    public void exportLruLinksCSV(String path) throws IOException {
+        CSVWriter writer = new CSVWriter(new FileWriter(path), ',');
+        // feed in your array (or convert your data to an array)
+        String[] headEntries = "source_lru,target_lru,source_node_id,target_node_id,source_we_id,target_we_id,source_we_name,target_we_name".split(","); // TODO: fix it
+        writer.writeNext(headEntries);
+        
+        getWebentities().forEach(we->{
+            int weid = we.getId();
+            getPages(weid).forEach(lru->{
+                getPlinksOutbound(lru).forEach(pLink->{
+                    try {
+                        WalkHistory sourcewh = followLru(pLink.sourcePage);
+                        WalkHistory targetwh = followLru(pLink.targetPage);
+                        String[] entries = new String[8];
+                        entries[0] = pLink.sourcePage;
+                        entries[1] = pLink.targetPage;
+                        entries[2] = Long.toString(sourcewh.nodeid);
+                        entries[3] = Long.toString(targetwh.nodeid);
+                        entries[4] = Long.toString(sourcewh.lastWebEntityId);
+                        entries[5] = Long.toString(targetwh.lastWebEntityId);
+                        entries[6] = WebEntities.getInstance().get(sourcewh.lastWebEntityId).getName();
+                        entries[7] = WebEntities.getInstance().get(targetwh.lastWebEntityId).getName();
+                        
+                        writer.writeNext(entries);
+                    } catch (IOException ex) {
+                        Logger.getLogger(WebEntityPageTree.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                });
                 
             });
         });
