@@ -37,7 +37,7 @@ public class Wetree {
         boolean reset = true;
         wept.init(reset);
 
-//        buildFakeCorpus(wept, 1000, 1000000);
+        buildFakeCorpus(wept, 100, 100000);
 
 //        List<WELink> links = wept.getWelinks();
 //        System.out.println(links.size() + " links");
@@ -45,7 +45,7 @@ public class Wetree {
 //        Set<Integer> wes = wept._getAllWebEntities_SLOW();
 //        System.out.println("Web Entities: " + wes.size());
 
-        lruBenchmark(wept);
+//        lruBenchmark(wept);
         exportWebentitiesCSV(wept);
         
 //        wept.log();
@@ -265,7 +265,7 @@ public class Wetree {
     }
     
     private static void exportWebentitiesCSV(WebEntityPageTree wept) throws IOException {
-        CSVWriter writer = new CSVWriter(new FileWriter("data/webentities.csv"), '\t');
+        CSVWriter writer = new CSVWriter(new FileWriter("data/webentities.csv"), ',');
         // feed in your array (or convert your data to an array)
         String[] headEntries = "id,name,prefixes,outlinks".split(",");
         writer.writeNext(headEntries);
