@@ -9,6 +9,7 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.mongodb.client.MongoCursor;
 import com.opencsv.CSVWriter;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -46,17 +47,12 @@ public class Wetree {
         wept.addPrefix("s:http|h:fr|h:sciences-po|h:medialab|");
         wept.addPrefix("s:http|h:fr|h:sciences-po|h:medialab|h:tools|");
         
-
 //        buildFakeCorpus(wept, 100, 100000);
 
-//        List<WELink> links = wept.getWelinks();
-//        System.out.println(links.size() + " links");
-        
-//        Set<Integer> wes = wept._getAllWebEntities_SLOW();
-//        System.out.println("Web Entities: " + wes.size());
+        lruBenchmark(wept);
 
-//        lruBenchmark(wept);
-        exportWebentitiesCSV(wept);
+        wept.exportWebentitiesCSV(System.getProperty("user.dir") + File.separator + "exports" + File.separator + "Web Entities.csv");
+        wept.exportLrusCSV(System.getProperty("user.dir") + File.separator + "exports" + File.separator + "LRUs.csv");
         
 //        wept.log();
 
@@ -263,33 +259,5 @@ public class Wetree {
         wept.addPlinks(plinks);
     }
     
-    private static void exportWebentitiesCSV(WebEntityPageTree wept) throws IOException {
-        CSVWriter writer = new CSVWriter(new FileWriter("data/webentities.csv"), ',');
-        // feed in your array (or convert your data to an array)
-        String[] headEntries = "id,name,prefixes,outlinks".split(",");
-        writer.writeNext(headEntries);
-        
-        // Get All Links
-        Multimap<Integer, Integer> outlinks = ArrayListMultimap.create();
-        wept.getWelinks().forEach(weLink->{
-            outlinks.put(weLink.sourceWebentityid, weLink.targetWebentityid);
-        });
-        
-        wept.getWebentities().forEach(we->{
-            ArrayList<String> links = new ArrayList<>();
-            outlinks.get(we.getId()).forEach(we2id->{
-                links.add(we2id.toString());
-            });
-            
-            String[] entries = new String[4];
-            entries[0] = we.getId().toString();
-            entries[1] = we.getName();
-            entries[2] = String.join(",", we.getPrefixes());
-            entries[3] = String.join(",", links);
-            
-            writer.writeNext(entries);
-        });
-        
-        writer.close();
-    }
+    
 }

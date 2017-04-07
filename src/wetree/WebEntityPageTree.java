@@ -10,8 +10,10 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.primitives.Chars;
+import com.opencsv.CSVWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
@@ -257,7 +259,9 @@ public class WebEntityPageTree implements WebEntityPageIndex {
             long nodeid = followLru(page).nodeid;
             LruTreeNode lruNode = new LruTreeNode(lruTreeFile, nodeid);
             // Follow the links
-            LinkTreeNode linkNode = new LinkTreeNode(linkTreeFile, lruNode.getOutLinks());
+            long outlinks = lruNode.getOutLinks();
+            if (outlinks <= 0) return result;
+            LinkTreeNode linkNode = new LinkTreeNode(linkTreeFile, outlinks);
             targetNodeIds.add(linkNode.getLru());
             long next = linkNode.getNext();
             while(next > 0) {
@@ -919,6 +923,70 @@ public class WebEntityPageTree implements WebEntityPageIndex {
         } else {
             return null;
         }
+    }
+    
+    public void exportWebentitiesCSV(String path) throws IOException {
+        CSVWriter writer = new CSVWriter(new FileWriter(path), ',');
+        // feed in your array (or convert your data to an array)
+        String[] headEntries = "id,name,prefixes,outlinks".split(",");
+        writer.writeNext(headEntries);
+        
+        // Get All Links
+        Multimap<Integer, Integer> outlinks = ArrayListMultimap.create();
+        getWelinks().forEach(weLink->{
+            outlinks.put(weLink.sourceWebentityid, weLink.targetWebentityid);
+        });
+        
+        getWebentities().forEach(we->{
+            ArrayList<String> links = new ArrayList<>();
+            outlinks.get(we.getId()).forEach(we2id->{
+                links.add(we2id.toString());
+            });
+            
+            String[] entries = new String[4];
+            entries[0] = we.getId().toString();
+            entries[1] = we.getName();
+            entries[2] = String.join(",", we.getPrefixes());
+            entries[3] = String.join(",", links);
+            
+            writer.writeNext(entries);
+        });
+        
+        writer.close();
+    }
+    
+    public void exportLrusCSV(String path) throws IOException {
+        CSVWriter writer = new CSVWriter(new FileWriter(path), ',');
+        // feed in your array (or convert your data to an array)
+        String[] headEntries = "lru,nodeid,weid,wename,outlinks_count,outlinks".split(","); // TODO: fix it
+        writer.writeNext(headEntries);
+        
+        getWebentities().forEach(we->{
+            int weid = we.getId();
+            getPages(weid).forEach(lru->{
+                try {
+                    ArrayList<String> links = new ArrayList<>();
+                    getPlinksOutbound(lru).forEach(pLink->{
+                        links.add(pLink.targetPage);
+                    });
+
+                    String[] entries = new String[6];
+                    entries[0] = lru;
+                    entries[1] = Long.toString(followLru(lru).nodeid);
+                    entries[2] = Integer.toString(weid);
+                    entries[3] = we.getName();
+                    entries[4] = Integer.toString(links.size());
+                    entries[5] = (links.size() > 0) ? (String.join(",", links)) : ("");
+
+                    writer.writeNext(entries);
+                } catch (IOException ex) {
+                    Logger.getLogger(WebEntityPageTree.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                
+            });
+        });
+        
+        writer.close();
     }
     
     private List<String> prefixExpand(String prefix) {
