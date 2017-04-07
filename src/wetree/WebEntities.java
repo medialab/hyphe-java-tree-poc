@@ -17,7 +17,6 @@ import java.io.IOException;
 import java.io.Writer;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -45,6 +44,7 @@ public class WebEntities {
         WebEntity we = new WebEntity();
         we.setId(currentWebEntityId++);
         we.setPrefixes(prefixes);
+        we.setName(LRUUtil.nameLRU(prefixes.get(0)));
         webEntities.add(we);
         webEntitiesIndex.put(we.getId(), we);
         write();

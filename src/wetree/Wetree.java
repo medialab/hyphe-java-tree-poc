@@ -10,7 +10,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -31,19 +30,18 @@ public class Wetree {
         wept = WebEntityPageTree.getInstance();
         wept.setDefaultWecreationrule(WebEntityCreationRules.RULE_DOMAIN);
         
-        boolean reset = false;
+        boolean reset = true;
         wept.init(reset);
 
 //        buildFakeCorpus(wept, 1000, 1000000);
 
-        List<WELink> links = wept.getWelinks();
-        System.out.println(links.size() + " links");
+//        List<WELink> links = wept.getWelinks();
+//        System.out.println(links.size() + " links");
         
 //        Set<Integer> wes = wept._getAllWebEntities_SLOW();
 //        System.out.println("Web Entities: " + wes.size());
 
-
-//        lruBenchmark(wept);
+        lruBenchmark(wept);
         
 //        wept.log();
 
@@ -86,7 +84,8 @@ public class Wetree {
         
         System.out.println("\nWeb Entities:");
         wept.getWebentities().forEach(we->{
-            System.out.print(we.getId() + ". ");
+            System.out.println(we.getId() + ". " + we.getName());
+            System.out.print("   Prefixes: ");
             we.getPrefixes().forEach(p->{
                 System.out.print(p + " ");
             });
@@ -115,32 +114,32 @@ public class Wetree {
 
         System.out.println("\n:: Test getPlinks(String page) on: 's:http|h:com|h:site|p:people|p:papa|'");
         wept.getPlinks("s:http|h:com|h:site|p:people|p:papa|").forEach(pLink->{
-            System.out.println("   - " + pLink.sourcePage + " => " + pLink.targetPage);
+            System.out.println("   " + pLink.sourcePage + " => " + pLink.targetPage);
         });
 
         System.out.println("\n:: Test getPlinksInbound(String page) on: 's:http|h:com|h:site|p:people|p:papa|'");
         wept.getPlinksInbound("s:http|h:com|h:site|p:people|p:papa|").forEach(pLink->{
-            System.out.println("   - " + pLink.sourcePage + " => " + pLink.targetPage);
+            System.out.println("   " + pLink.sourcePage + " => " + pLink.targetPage);
         });
 
         System.out.println("\n:: Test getPlinksOutbound(String page) on: 's:http|h:com|h:site|p:people|p:papa|'");
         wept.getPlinksOutbound("s:http|h:com|h:site|p:people|p:papa|").forEach(pLink->{
-            System.out.println("   - " + pLink.sourcePage + " => " + pLink.targetPage);
+            System.out.println("   " + pLink.sourcePage + " => " + pLink.targetPage);
         });
         
         System.out.println("\n:: Test getWelinks(String page) on: 's:http|h:com|h:site|p:people|p:papa|'");
         wept.getWelinks("s:http|h:com|h:site|p:people|p:papa|").forEach(weLink->{
-            System.out.println("   - " + weLink.sourceWebentityid + " => " + weLink.targetWebentityid);
+            System.out.println("   " + weLink.sourceWebentityid + " => " + weLink.targetWebentityid);
         });
         
         System.out.println("\n:: Test getWelinksInbound(String page) on: 's:http|h:com|h:site|p:people|p:papa|'");
         wept.getWelinksInbound("s:http|h:com|h:site|p:people|p:papa|").forEach(weLink->{
-            System.out.println("   - " + weLink.sourceWebentityid + " => " + weLink.targetWebentityid);
+            System.out.println("   " + weLink.sourceWebentityid + " => " + weLink.targetWebentityid);
         });
         
         System.out.println("\n:: Test getWelinksOutbound(String page) on: 's:http|h:com|h:site|p:people|p:papa|'");
         wept.getWelinksOutbound("s:http|h:com|h:site|p:people|p:papa|").forEach(weLink->{
-            System.out.println("   - " + weLink.sourceWebentityid + " => " + weLink.targetWebentityid);
+            System.out.println("   " + weLink.sourceWebentityid + " => " + weLink.targetWebentityid);
         });
         
 //        wept.log();
