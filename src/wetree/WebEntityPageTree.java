@@ -10,8 +10,10 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.primitives.Chars;
+import com.opencsv.CSVWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
@@ -919,6 +921,36 @@ public class WebEntityPageTree implements WebEntityPageIndex {
         } else {
             return null;
         }
+    }
+    
+    public void exportWebentitiesCSV(String path) throws IOException {
+        CSVWriter writer = new CSVWriter(new FileWriter(path), ',');
+        // feed in your array (or convert your data to an array)
+        String[] headEntries = "id,name,prefixes,outlinks".split(",");
+        writer.writeNext(headEntries);
+        
+        // Get All Links
+        Multimap<Integer, Integer> outlinks = ArrayListMultimap.create();
+        getWelinks().forEach(weLink->{
+            outlinks.put(weLink.sourceWebentityid, weLink.targetWebentityid);
+        });
+        
+        getWebentities().forEach(we->{
+            ArrayList<String> links = new ArrayList<>();
+            outlinks.get(we.getId()).forEach(we2id->{
+                links.add(we2id.toString());
+            });
+            
+            String[] entries = new String[4];
+            entries[0] = we.getId().toString();
+            entries[1] = we.getName();
+            entries[2] = String.join(",", we.getPrefixes());
+            entries[3] = String.join(",", links);
+            
+            writer.writeNext(entries);
+        });
+        
+        writer.close();
     }
     
     private List<String> prefixExpand(String prefix) {
