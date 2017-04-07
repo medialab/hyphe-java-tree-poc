@@ -44,6 +44,7 @@ public interface WebEntityPageIndex {
 //    public List<PLink> getPlinksInternal(int weid);
 //    public List<PLink> getPlinksInbound(int weid);
 //    public List<PLink> getPlinksOutbound(int weid);
+    public WebEntity addPrefix(String prefix);
     public void addWecreationrule(WebEntityCreationRule wecr);
 //    public void removeWecreationrule(WebEntityCreationRule wecr);
 //    public List<WebEntityCreationRule> getWecreationrules();

@@ -30,13 +30,13 @@ public class WebEntityCreationRules {
     private static final WebEntityCreationRules INSTANCE = new WebEntityCreationRules();
     private final String wecrFileName = System.getProperty("user.dir") + File.separator + "data" + File.separator + "webentitycreationrules.json";
     private List<WebEntityCreationRule> rules = new ArrayList<>();
-    private HashMap<Integer, WebEntityCreationRule> rulesIndex;
+    private HashMap<Integer, WebEntityCreationRule> rulesIndex = new HashMap<>();
     private int currentWECRId = 1;
     
     public static final String RULE_DOMAIN = "(s:[a-zA-Z]+\\|(t:[0-9]+\\|)?(h:[^\\|]+\\|(h:[^\\|]+\\|)|h:(localhost|(\\d{1,3}\\.){3}\\d{1,3}|\\[[\\da-f]*:[\\da-f:]*\\])\\|))";
     public static final String RULE_SUBDOMAIN = "(s:[a-zA-Z]+\\|(t:[0-9]+\\|)?(h:[^\\|]+\\|(h:[^\\|]+\\|)+|h:(localhost|(\\d{1,3}\\.){3}\\d{1,3}|\\[[\\da-f]*:[\\da-f:]*\\])\\|))";
-    public static final String RULE_PATH1 = "(s:[a-zA-Z]+\\|(t:[0-9]+\\|)?(h:[^\\|]+\\|(h:[^\\|]+\\|)+|h:(localhost|(\\d{1,3}\\.){3}\\d{1,3}|\\[[\\da-f]*:[\\da-f:]*\\])\\|)(p:[^\\|]+\\|){1})";
-    public static final String RULE_PATH2 = "(s:[a-zA-Z]+\\|(t:[0-9]+\\|)?(h:[^\\|]+\\|(h:[^\\|]+\\|)+|h:(localhost|(\\d{1,3}\\.){3}\\d{1,3}|\\[[\\da-f]*:[\\da-f:]*\\])\\|)(p:[^\\|]+\\|){2})";
+    public static final String RULE_PATH_1 = "(s:[a-zA-Z]+\\|(t:[0-9]+\\|)?(h:[^\\|]+\\|(h:[^\\|]+\\|)+|h:(localhost|(\\d{1,3}\\.){3}\\d{1,3}|\\[[\\da-f]*:[\\da-f:]*\\])\\|)(p:[^\\|]+\\|){1})";
+    public static final String RULE_PATH_2 = "(s:[a-zA-Z]+\\|(t:[0-9]+\\|)?(h:[^\\|]+\\|(h:[^\\|]+\\|)+|h:(localhost|(\\d{1,3}\\.){3}\\d{1,3}|\\[[\\da-f]*:[\\da-f:]*\\])\\|)(p:[^\\|]+\\|){2})";
     
     // Singleton
     private WebEntityCreationRules(){}

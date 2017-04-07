@@ -32,12 +32,22 @@ public class Wetree {
     public static void main(String[] args) throws IOException {
         WebEntityPageTree wept;
         wept = WebEntityPageTree.getInstance();
-        wept.setDefaultWecreationrule(WebEntityCreationRules.RULE_DOMAIN);
         
         boolean reset = true;
         wept.init(reset);
+        
+        // REAL CORPUS BENCHMARK
+        // Default web entity rules and definitions
+        wept.setDefaultWecreationrule(WebEntityCreationRules.RULE_DOMAIN);
+        wept.addWecreationrule(WebEntityCreationRules.getInstance().create("s:http|h:com|h:twitter|", WebEntityCreationRules.RULE_PATH_1));
+        wept.addWecreationrule(WebEntityCreationRules.getInstance().create("s:http|h:com|h:facebook|", WebEntityCreationRules.RULE_PATH_1));
+        wept.addWecreationrule(WebEntityCreationRules.getInstance().create("s:http|h:com|h:linkedin|", WebEntityCreationRules.RULE_PATH_2));
+        // Manual web entities definition
+        wept.addPrefix("s:http|h:fr|h:sciences-po|h:medialab|");
+        wept.addPrefix("s:http|h:fr|h:sciences-po|h:medialab|h:tools|");
+        
 
-        buildFakeCorpus(wept, 100, 100000);
+//        buildFakeCorpus(wept, 100, 100000);
 
 //        List<WELink> links = wept.getWelinks();
 //        System.out.println(links.size() + " links");
@@ -53,7 +63,7 @@ public class Wetree {
     }
     
     private static void lruBenchmark(WebEntityPageTree wept) throws IOException {
-        wept.addWecreationrule(WebEntityCreationRules.getInstance().create("s:http|h:com|h:twitter|", WebEntityCreationRules.RULE_PATH1));
+        wept.addWecreationrule(WebEntityCreationRules.getInstance().create("s:http|h:com|h:twitter|", WebEntityCreationRules.RULE_PATH_1));
         wept.addPage("s:http|h:com|h:site|p:people|p:papa|");
         wept.addPage("s:http|h:com|h:site|p:people|p:maman|");
         wept.addPage("s:http|h:com|h:site|h:www|");

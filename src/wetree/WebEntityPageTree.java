@@ -883,6 +883,30 @@ public class WebEntityPageTree implements WebEntityPageIndex {
         }
     }
     
+    
+    @Override
+    public WebEntity addPrefix(String prefix) {
+        try {
+            List<String> prefixes = prefixExpand(prefix);
+            WebEntity webEntity = WebEntities.getInstance().create(prefixes);
+            prefixes.forEach(p->{
+                try {
+                    long nodeid = add(p).nodeid;
+                    LruTreeNode lruNode = new LruTreeNode(lruTreeFile, nodeid);
+                    lruNode.setWebEntity(webEntity.getId());
+                    lruNode.write();
+                } catch (IOException ex) {
+                    Logger.getLogger(WebEntityPageTree.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            });
+            webEntity.setPrefixes(prefixes);
+            return webEntity;
+        } catch (IOException ex) {
+            Logger.getLogger(WebEntityPageTree.class.getName()).log(Level.SEVERE, null, ex);
+            return null;
+        }
+    }
+    
     public WebEntity applyWebEntityCreationRule(WebEntityCreationRule rule, String lru) {
         if(rule == null || lru == null) {
             return null;
@@ -890,26 +914,8 @@ public class WebEntityPageTree implements WebEntityPageIndex {
         String prefix;
         Matcher matcher = Pattern.compile(rule.getRegexp(), Pattern.CASE_INSENSITIVE).matcher(lru);
         if(matcher.find()) {
-            try {
-                prefix = matcher.group();
-                List<String> prefixes = prefixExpand(prefix);
-                WebEntity webEntity = WebEntities.getInstance().create(prefixes);
-                prefixes.forEach(p->{
-                    try {
-                        long nodeid = add(p).nodeid;
-                        LruTreeNode lruNode = new LruTreeNode(lruTreeFile, nodeid);
-                        lruNode.setWebEntity(webEntity.getId());
-                        lruNode.write();
-                    } catch (IOException ex) {
-                        Logger.getLogger(WebEntityPageTree.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                });
-                webEntity.setPrefixes(prefixes);
-                return webEntity;
-            } catch (IOException ex) {
-                Logger.getLogger(WebEntityPageTree.class.getName()).log(Level.SEVERE, null, ex);
-                return null;
-            }
+            prefix = matcher.group();
+            return addPrefix(prefix);
         } else {
             return null;
         }
