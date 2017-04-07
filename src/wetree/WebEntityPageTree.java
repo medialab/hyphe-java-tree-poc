@@ -953,6 +953,39 @@ public class WebEntityPageTree implements WebEntityPageIndex {
         writer.close();
     }
     
+    public void exportLrusCSV(String path) throws IOException {
+        CSVWriter writer = new CSVWriter(new FileWriter(path), ',');
+        // feed in your array (or convert your data to an array)
+        String[] headEntries = "lru,nodeid,weid,wename,outlinks".split(","); // TODO: fix it
+        writer.writeNext(headEntries);
+        
+        getWebentities().forEach(we->{
+            int weid = we.getId();
+            getPages(weid).forEach(lru->{
+                try {
+                    ArrayList<String> links = new ArrayList<>();
+                    getPlinksOutbound(lru).forEach(pLink->{
+                        links.add(pLink.targetPage);
+                    });
+
+                    String[] entries = new String[5];
+                    entries[0] = lru;
+                    entries[1] = Long.toString(followLru(lru).nodeid);
+                    entries[2] = Integer.toString(weid);
+                    entries[3] = we.getName();
+                    entries[4] = String.join(",", links);
+
+                    writer.writeNext(entries);
+                } catch (IOException ex) {
+                    Logger.getLogger(WebEntityPageTree.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                
+            });
+        });
+        
+        writer.close();
+    }
+    
     private List<String> prefixExpand(String prefix) {
         ArrayList<String> result = new ArrayList<>();
         result.add(prefix);

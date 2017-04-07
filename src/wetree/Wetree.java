@@ -47,12 +47,12 @@ public class Wetree {
         wept.addPrefix("s:http|h:fr|h:sciences-po|h:medialab|");
         wept.addPrefix("s:http|h:fr|h:sciences-po|h:medialab|h:tools|");
         
-
 //        buildFakeCorpus(wept, 100, 100000);
 
         lruBenchmark(wept);
 
         wept.exportWebentitiesCSV(System.getProperty("user.dir") + File.separator + "exports" + File.separator + "Web Entities.csv");
+        wept.exportLrusCSV(System.getProperty("user.dir") + File.separator + "exports" + File.separator + "LRUs.csv");
         
 //        wept.log();
 
