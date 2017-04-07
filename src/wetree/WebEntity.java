@@ -14,6 +14,15 @@ import java.util.List;
 public class WebEntity {
     private Integer id;
     private List<String> prefixes;
+    private String name;
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
 
     public Integer getId() {
         return id;

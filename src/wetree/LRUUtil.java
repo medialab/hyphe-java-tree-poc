@@ -171,7 +171,7 @@ public class LRUUtil {
             piece = URLDecoder.decode(lruElement);
             if(!Strings.isNullOrEmpty(lruElement)) {
             	if(key.equals("h:") && ! lruElement.equals("www")) {
-                    lastHost = lruElement; // FIXME: use proper case
+                    lastHost = toTitleCase(lruElement);
                     if (host.size() > 0 || lastHost.length() > 3) {
                         host.add(0, lastHost);
                     }
@@ -191,5 +191,22 @@ public class LRUUtil {
         }
     	return String.join(".", host) + path + name;
     }
+    
+    public static String toTitleCase(String input) {
+        StringBuilder titleCase = new StringBuilder();
+        boolean nextTitleCase = true;
 
+        for (char c : input.toCharArray()) {
+            if (Character.isSpaceChar(c)) {
+                nextTitleCase = true;
+            } else if (nextTitleCase) {
+                c = Character.toTitleCase(c);
+                nextTitleCase = false;
+            }
+
+            titleCase.append(c);
+        }
+
+        return titleCase.toString();
+    }
 }
