@@ -228,7 +228,9 @@ public class WebEntityPageTree implements WebEntityPageIndex {
             long nodeid = followLru(page).nodeid;
             LruTreeNode lruNode = new LruTreeNode(lruTreeFile, nodeid);
             // Follow the links
-            LinkTreeNode linkNode = new LinkTreeNode(linkTreeFile, lruNode.getInLinks());
+            long inlinks = lruNode.getInLinks();
+            if (inlinks <= 0) return result;
+            LinkTreeNode linkNode = new LinkTreeNode(linkTreeFile, inlinks);
             sourceNodeIds.add(linkNode.getLru());
             long next = linkNode.getNext();
             while(next > 0) {
