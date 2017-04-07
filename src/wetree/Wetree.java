@@ -236,23 +236,14 @@ public class Wetree {
         System.out.println(" done.");
     }
     
-    private static void mongoTest() {
-
-        // Instantiating and resetting DB files
-        WebEntityPageTree wept;
-        wept = WebEntityPageTree.getInstance();
-        wept.setDefaultWecreationrule(WebEntityCreationRules.RULE_DOMAIN);
-        try {
-            wept.init(true);
-        } catch (FileNotFoundException ex) {
-            Logger.getLogger(Wetree.class.getName()).log(Level.SEVERE, null, ex);
-        }
+    private static void mongoTest(WebEntityPageTree wept) {
 
         // Creating a mongo cursor
         MongoConnector connector = new MongoConnector();
         MongoCursor<Document> cursor = connector.getPagesCursor();
 
         int i = 0;
+        ArrayList<PLink> plinks = new ArrayList<>();
         while (cursor.hasNext()) {
             Document doc = cursor.next();
             String lru = doc.getString("lru");
@@ -264,14 +255,12 @@ public class Wetree {
             List<String> lrulinks = (List<String>) doc.get("lrulinks");
             System.out.println((i++) + " (" + lrulinks.size() + ") " + lru);
 
-            ArrayList<PLink> plinks = new ArrayList<>();
-
             lrulinks.forEach((String lrulink)->{
                plinks.add(new PLink(lru, lrulink));
             });
-
-            wept.addPlinks(plinks);
         }
+        
+        wept.addPlinks(plinks);
     }
     
     private static void exportWebentitiesCSV(WebEntityPageTree wept) throws IOException {
