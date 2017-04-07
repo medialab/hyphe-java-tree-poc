@@ -967,7 +967,6 @@ public class WebEntityPageTree implements WebEntityPageIndex {
                 try {
                     ArrayList<String> links = new ArrayList<>();
                     getPlinksOutbound(lru).forEach(pLink->{
-                        System.out.println("pLink: '" + pLink.sourcePage + "' => '" + pLink.targetPage + "'");
                         links.add(pLink.targetPage);
                     });
 
@@ -977,7 +976,7 @@ public class WebEntityPageTree implements WebEntityPageIndex {
                     entries[2] = Integer.toString(weid);
                     entries[3] = we.getName();
                     entries[4] = Integer.toString(links.size());
-                    entries[5] = (links.size() > 0) ? (String.join(",", links)) : (" ");
+                    entries[5] = (links.size() > 0) ? (String.join(",", links)) : ("");
 
                     writer.writeNext(entries);
                 } catch (IOException ex) {
