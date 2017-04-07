@@ -61,16 +61,16 @@ public class Wetree {
     
     private static void lruBenchmark(WebEntityPageTree wept) throws IOException {
         wept.addWecreationrule(WebEntityCreationRules.getInstance().create("s:http|h:com|h:twitter|", WebEntityCreationRules.RULE_PATH_1));
-        wept.addPage("s:http|h:com|h:site|p:people|p:papa|");
-        wept.addPage("s:http|h:com|h:site|p:people|p:maman|");
-        wept.addPage("s:http|h:com|h:site|h:www|");
-        wept.addPage("s:http|h:com|h:site|h:www|p:people|p:maman|");
-
-        wept.addPage("s:http|h:com|h:twitter|h:www|");
-        wept.addPage("s:http|h:com|h:twitter|p:papa|");
-        wept.addPage("s:http|h:com|h:twitter|p:pépé|");
-        wept.addPage("s:http|h:com|h:twitter|p:pépé|today|");
-        wept.addPage("s:http|h:com|h:twitter|p:pépé|yesterday|");
+//        wept.addPage("s:http|h:com|h:site|p:people|p:papa|");
+//        wept.addPage("s:http|h:com|h:site|p:people|p:maman|");
+//        wept.addPage("s:http|h:com|h:site|h:www|");
+//        wept.addPage("s:http|h:com|h:site|h:www|p:people|p:maman|");
+//
+//        wept.addPage("s:http|h:com|h:twitter|h:www|");
+//        wept.addPage("s:http|h:com|h:twitter|p:papa|");
+//        wept.addPage("s:http|h:com|h:twitter|p:pépé|");
+//        wept.addPage("s:http|h:com|h:twitter|p:pépé|today|");
+//        wept.addPage("s:http|h:com|h:twitter|p:pépé|yesterday|");
         
         wept.addPlink("s:http|h:com|h:site|p:people|p:papa|", "s:http|h:com|h:site|p:people|p:maman|");
         wept.addPlink("s:http|h:com|h:site|p:people|p:maman|", "s:http|h:com|h:site|p:people|p:papa|");

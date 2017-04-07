@@ -13,7 +13,7 @@ import java.util.List;
  */
 public interface WebEntityPageIndex {
     public void reset();
-    public void addPage(String page);
+//    public void addPage(String page);
     public void associatePrefixWithWebentity(String lru, int weid);
 //    public void dissociatePrefix(String lru);
     public List<String> getPages(String prefix);

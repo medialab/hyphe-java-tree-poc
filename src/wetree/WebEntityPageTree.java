@@ -86,8 +86,7 @@ public class WebEntityPageTree implements WebEntityPageIndex {
         }
     }
     
-    @Override
-    public void addPage(String page) {
+    public WalkHistory addPage(String page) {
         try {
             // Add the lru to the lruTree
             WalkHistory wh = add(page);
@@ -116,8 +115,10 @@ public class WebEntityPageTree implements WebEntityPageIndex {
             LruTreeNode lruNode = new LruTreeNode(lruTreeFile, wh.nodeid);
             lruNode.setEnding(true);
             lruNode.write();
+            return wh;
         } catch (IOException ex) {
             Logger.getLogger(WebEntityPageTree.class.getName()).log(Level.SEVERE, null, ex);
+            return null;
         }
     }
     
@@ -143,24 +144,20 @@ public class WebEntityPageTree implements WebEntityPageIndex {
     
     @Override
     public void addPlink(String sourcePage, String targetPage) {
-        try {
-            long sourcenodeid = add(sourcePage).nodeid;
-            long targetnodeid = add(targetPage).nodeid;
-            if (sourcenodeid < 0) {
-                throw new java.lang.RuntimeException(
-                        "Link add issue: " + sourcePage + " could not be found in the tree"
-                );
-            }
-            if (targetnodeid < 0) {
-                throw new java.lang.RuntimeException(
-                        "Link add issue: " + targetPage + " could not be found in the tree"
-                );
-            }
-            addLinkStub(sourcenodeid, targetnodeid, true);
-            addLinkStub(targetnodeid, sourcenodeid, false);
-        } catch (IOException ex) {
-            Logger.getLogger(WebEntityPageTree.class.getName()).log(Level.SEVERE, null, ex);
+        long sourcenodeid = addPage(sourcePage).nodeid; // FIXME add or addPage
+        long targetnodeid = addPage(targetPage).nodeid;
+        if (sourcenodeid < 0) {
+            throw new java.lang.RuntimeException(
+                    "Link add issue: " + sourcePage + " could not be found in the tree"
+            );
         }
+        if (targetnodeid < 0) {
+            throw new java.lang.RuntimeException(
+                    "Link add issue: " + targetPage + " could not be found in the tree"
+            );
+        }
+        addLinkStub(sourcenodeid, targetnodeid, true);
+        addLinkStub(targetnodeid, sourcenodeid, false);
     }
     
     @Override
@@ -174,6 +171,10 @@ public class WebEntityPageTree implements WebEntityPageIndex {
             pages.add(pLink.targetPage);
             stubsString.put(pLink.sourcePage, pLink.targetPage);
             stubsReverseString.put(pLink.targetPage, pLink.sourcePage);
+        });
+        
+        pages.forEach(lru->{
+            addPage(lru);
         });
         
         // Add each different page and index their nodeid
