@@ -286,6 +286,7 @@ public class WebEntityPageTree implements WebEntityPageIndex {
         return result;
     }
     
+    @Override
     public int getPageDegree(String page) {
         try {
             long nodeid = followLru(page).nodeid;
@@ -297,6 +298,7 @@ public class WebEntityPageTree implements WebEntityPageIndex {
         return -1;
     }
     
+    @Override
     public int getPageIndegree(String page) {
         try {
             long nodeid = followLru(page).nodeid;
@@ -308,6 +310,7 @@ public class WebEntityPageTree implements WebEntityPageIndex {
         return -1;
     }
     
+    @Override
     public int getPageOutdegree(String page) {
         try {
             long nodeid = followLru(page).nodeid;
@@ -927,7 +930,7 @@ public class WebEntityPageTree implements WebEntityPageIndex {
         }
     }
     
-    public void exportWebentitiesCSV(String path) throws IOException {
+    public void exportWebentitiesCSV(String path, boolean exportLinks) throws IOException {
         CSVWriter writer = new CSVWriter(new FileWriter(path), ',');
         // feed in your array (or convert your data to an array)
         String[] headEntries = "id,name,prefixes,outlinks".split(",");
@@ -935,7 +938,7 @@ public class WebEntityPageTree implements WebEntityPageIndex {
         
         // Get All Links
         Multimap<Integer, Integer> outlinks = ArrayListMultimap.create();
-        getWelinks().forEach(weLink->{
+        if (exportLinks) getWelinks().forEach(weLink->{
             outlinks.put(weLink.sourceWebentityid, weLink.targetWebentityid);
         });
         
@@ -949,7 +952,7 @@ public class WebEntityPageTree implements WebEntityPageIndex {
             entries[0] = we.getId().toString();
             entries[1] = we.getName();
             entries[2] = String.join(",", we.getPrefixes());
-            entries[3] = String.join(",", links);
+            entries[3] = exportLinks ? String.join(",", links) : "";
             
             writer.writeNext(entries);
         });
@@ -957,7 +960,26 @@ public class WebEntityPageTree implements WebEntityPageIndex {
         writer.close();
     }
     
-    public void exportLrusCSV(String path) throws IOException {
+    public void exportWebentityLinksCSV(String path) throws IOException {
+        CSVWriter writer = new CSVWriter(new FileWriter(path), ',');
+        // feed in your array (or convert your data to an array)
+        String[] headEntries = "sourceid,targetid,sourcename,targetname".split(",");
+        writer.writeNext(headEntries);
+
+        // Get All Links
+        getWelinks().forEach(weLink->{
+            String[] entries = new String[4];
+            entries[0] = Integer.toString(weLink.sourceWebentityid);
+            entries[1] = Integer.toString(weLink.targetWebentityid);
+            entries[2] = WebEntities.getInstance().get(weLink.sourceWebentityid).getName();
+            entries[3] = WebEntities.getInstance().get(weLink.targetWebentityid).getName();
+            writer.writeNext(entries);
+        });
+        
+        writer.close();
+    }
+    
+    public void exportLrusCSV(String path, boolean exportLinks) throws IOException {
         CSVWriter writer = new CSVWriter(new FileWriter(path), ',');
         // feed in your array (or convert your data to an array)
         String[] headEntries = "lru,nodeid,weid,wename,outlinks_count,outlinks".split(","); // TODO: fix it
@@ -968,7 +990,7 @@ public class WebEntityPageTree implements WebEntityPageIndex {
             getPages(weid).forEach(lru->{
                 try {
                     ArrayList<String> links = new ArrayList<>();
-                    getPlinksOutbound(lru).forEach(pLink->{
+                    if (exportLinks) getPlinksOutbound(lru).forEach(pLink->{
                         links.add(pLink.targetPage);
                     });
 
@@ -978,7 +1000,7 @@ public class WebEntityPageTree implements WebEntityPageIndex {
                     entries[2] = Integer.toString(weid);
                     entries[3] = we.getName();
                     entries[4] = Integer.toString(links.size());
-                    entries[5] = (links.size() > 0) ? (String.join(",", links)) : ("");
+                    entries[5] = exportLinks ?(links.size() > 0 ? String.join(",", links) : "") : "";
 
                     writer.writeNext(entries);
                 } catch (IOException ex) {

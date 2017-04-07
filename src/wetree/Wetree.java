@@ -51,8 +51,9 @@ public class Wetree {
 
         lruBenchmark(wept);
 
-        wept.exportWebentitiesCSV(System.getProperty("user.dir") + File.separator + "exports" + File.separator + "Web Entities.csv");
-        wept.exportLrusCSV(System.getProperty("user.dir") + File.separator + "exports" + File.separator + "LRUs.csv");
+        wept.exportWebentitiesCSV(System.getProperty("user.dir") + File.separator + "exports" + File.separator + "Web Entities.csv", false);
+        wept.exportWebentityLinksCSV(System.getProperty("user.dir") + File.separator + "exports" + File.separator + "Web Entity Links.csv");
+//        wept.exportLrusCSV(System.getProperty("user.dir") + File.separator + "exports" + File.separator + "LRUs.csv", true);
         
 //        wept.log();
 
